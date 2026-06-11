@@ -1,0 +1,356 @@
+﻿*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --teal-50: #E1F5EE;
+    --teal-100: #9FE1CB;
+    --teal-400: #1D9E75;
+    --teal-600: #0F6E56;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+}
+
+/* ─── Root: ocupa toda la pantalla ─── */
+html, body {
+    height: 100%;
+}
+
+.lr-root {
+    font-family: var(--font-body);
+    background: #f5f3ef;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ─── Barra superior oscura ─── */
+.lr-topbar {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    height: 52px;
+    flex-shrink: 0;
+}
+
+.lr-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.lr-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #aaa;
+    font-size: 12px;
+    text-decoration: none;
+    border: 0.5px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    transition: background 0.15s;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font-body);
+}
+
+    .lr-back:hover {
+        background: rgba(255,255,255,0.07);
+        color: #ddd;
+    }
+
+    .lr-back i {
+        font-size: 14px;
+    }
+
+.lr-titulo {
+    font-family: var(--font-display);
+    font-size: 15px;
+    color: #fff;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.lr-autor {
+    font-size: 11px;
+    color: #777;
+    margin-top: 1px;
+}
+
+/* ─── Botón guardar progreso ─── */
+.guardar-form {
+    display: flex;
+}
+
+.lr-btn-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    background: var(--teal-400);
+    color: var(--teal-50);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+    .lr-btn-save:hover {
+        background: var(--teal-600);
+    }
+
+    .lr-btn-save i {
+        font-size: 14px;
+    }
+
+/* ─── Cuerpo ── */
+.lr-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ─── Sidebar ─── */
+.lr-sidebar {
+    width: 220px;
+    background: #fff;
+    border-right: 0.5px solid rgba(0,0,0,0.08);
+    padding: 1.5rem 1.25rem;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+}
+
+.lr-sidebar-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #bbb;
+    margin-bottom: 8px;
+}
+
+/* Barra de progreso sidebar */
+.lr-progreso-track {
+    height: 5px;
+    background: #eee;
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.lr-progreso-fill {
+    height: 100%;
+    background: var(--teal-400);
+    border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lr-progreso-nums {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 5px;
+}
+
+    .lr-progreso-nums span:last-child {
+        color: var(--teal-400);
+        font-weight: 500;
+    }
+
+/* Stats */
+.lr-stat-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lr-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.lr-stat-k {
+    color: #aaa;
+}
+
+.lr-stat-v {
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+/* ─── Área del visor ─── */
+.lr-viewer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+.lr-page-wrap {
+    width: 100%;
+    overflow: hidden; /* por si acaso */
+    display: flex;
+    justify-content: center;
+}
+
+#pdf-render {
+    max-width: 100%;
+    display: block;
+}
+
+.lr-page-wrap canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+/* ─── Controles de navegación ─── */
+.lr-nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.lr-nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid rgba(0,0,0,0.12);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 16px;
+    color: #1a1a1a;
+}
+
+    .lr-nav-btn:hover {
+        background: #f0f0f0;
+    }
+
+    .lr-nav-btn:active {
+        transform: scale(0.96);
+    }
+
+    .lr-nav-btn i {
+        font-size: 18px;
+    }
+
+.lr-page-info {
+    font-size: 12px;
+    color: #888;
+    min-width: 110px;
+    text-align: center;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+    .lr-sidebar {
+        display: none;
+    }
+
+    .lr-topbar {
+        padding: 0 1rem;
+    }
+
+    .lr-viewer {
+        padding: 1rem;
+    }
+}
+
+/* ── Back button in sidebar ── */
+.lr-back--sidebar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-family: var(--font-body);
+    color: var(--teal-400);
+    background: transparent;
+    border: 0.5px solid var(--teal-100);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+    .lr-back--sidebar:hover {
+        background: var(--teal-50);
+    }
+
+/* ── Prevent layout freeze on orientation change ── */
+.lr-root {
+    min-height: 100dvh;
+}
+
+@media (max-width: 640px) {
+    .lr-topbar {
+        flex-wrap: wrap;
+        height: auto;
+        min-height: 52px;
+        padding: 8px 1rem;
+        gap: 8px;
+    }
+
+    .lr-topbar-left {
+        gap: 8px;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .lr-titulo {
+        font-size: 13px;
+    }
+}
+/* Mejoras responsive móvil */
+@media (max-width: 640px) {
+    .lr-nav-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .lr-nav {
+        gap: 20px;
+    }
+
+    .lr-page-info {
+        font-size: 13px;
+    }
+
+    .lr-btn-save span {
+        display: none;
+    }
+}
+
+/* Visor centrado limpio */
+.lr-viewer {
+    background: #f5f3ef;
+}
+
+#pdf-render {
+    border-radius: 4px;
+    border: 0.5px solid rgba(0,0,0,0.08);
+}

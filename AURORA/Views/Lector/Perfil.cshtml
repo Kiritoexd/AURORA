@@ -1,0 +1,279 @@
+﻿@model AURORA.Models.PerfilViewModel
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<link rel="stylesheet" href="~/css/Perfil.css" asp-append-version="true" />
+
+<div class="perfil-wrapper">
+    <div class="perfil-inner">
+
+        <div class="perfil-header">
+            <div class="foto-wrapper">
+                <div class="perfil-foto-circle" id="fotoCircle">
+                    <img src="@(string.IsNullOrEmpty(Model.FotoUrl) ? "/img/user-placeholder.svg" : Model.FotoUrl)"
+                         alt="Foto de perfil" class="perfil-foto" id="fotoPreview"
+                         onerror="this.src='/img/user-placeholder.svg'" />
+                    <div class="foto-overlay">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                            <circle cx="12" cy="13" r="4" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="perfil-header-info">
+                <h2 class="perfil-nombre" id="headerNombre">@Model.NombreCompleto</h2>
+                <p class="perfil-email">@Model.Email</p>
+                <span class="perfil-fecha-badge">Registrado: @Model.FechaRegistro.ToShortDateString()</span>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="perfil-alert perfil-alert--ok perfil-alert--animated">@TempData["Success"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="perfil-alert perfil-alert--err perfil-alert--animated">@TempData["Error"]</div>
+        }
+
+        <div class="perfil-grid">
+
+            <!-- Editar perfil -->
+            <div class="card perfil-card" style="grid-column: 1 / -1;">
+                <p class="pcard-label">Editar perfil</p>
+                <form asp-controller="Lector" asp-action="EditarPerfil" method="post" class="perfil-form" id="perfilForm">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+
+                    <div>
+                        <label for="inputNombres">Nombres</label>
+                        <input type="text" id="inputNombres" name="Nombres" value="@Model.Nombres"
+                               maxlength="50" required oninput="actualizarHeaderNombre()" />
+                    </div>
+
+                    <div>
+                        <label for="inputApPat">Apellido paterno</label>
+                        <input type="text" id="inputApPat" name="ApellidoPaterno" value="@Model.ApellidoPaterno"
+                               maxlength="50" oninput="actualizarHeaderNombre()" />
+                    </div>
+
+                    <div>
+                        <label for="inputApMat">Apellido materno</label>
+                        <input type="text" id="inputApMat" name="ApellidoMaterno" value="@Model.ApellidoMaterno"
+                               maxlength="50" oninput="actualizarHeaderNombre()" />
+                    </div>
+
+                    <div>
+                        <label>Correo electrónico</label>
+                        <input type="email" name="Email" value="@Model.Email" readonly class="perfil-input--readonly" />
+                        <p class="perfil-note">El correo no puede modificarse por seguridad.</p>
+                    </div>
+
+                    <button type="submit" class="btn-guardar" id="btnGuardar">
+                        <span class="btn-text">Guardar cambios</span>
+                        <span class="btn-spinner">Guardando...</span>
+                    </button>
+                </form>
+
+                <form asp-controller="Lector" asp-action="SubirFoto" method="post"
+                      enctype="multipart/form-data" class="foto-form" id="fotoForm">
+                    <label class="btn-foto-label" for="fotoInput">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        Elegir foto
+                    </label>
+                    <input type="file" name="foto" id="fotoInput" accept="image/*" style="display:none" />
+                    <span class="foto-nombre" id="fotoNombre">Sin archivo</span>
+                </form>
+            </div>
+
+            <!-- Racha -->
+            <div class="card perfil-card racha-card">
+                <p class="pcard-label">Racha de lectura</p>
+                <div class="racha-nums">
+                    <span class="racha-big" id="rachaNum">0</span>
+                    <span class="racha-unit">días seguidos</span>
+                    <span class="racha-emoji" id="rachaEmoji"></span>
+                </div>
+                <div class="racha-bar">
+                    <div class="racha-progreso" id="rachaFill"
+                         style="width:0%"
+                         data-target="@Model.RachaPct.ToString("F0")%"></div>
+                </div>
+                <div class="racha-info-row">
+                    <span class="racha-meta">Meta: @Model.MetaDias días</span>
+                    <span class="racha-pct" id="rachaPct">0%</span>
+                </div>
+                @{
+                    var restantes = Model.MetaDias - Model.DiasSeguidos;
+                }
+                <span class="racha-restantes">
+                    @if (restantes > 0)
+                    {
+                        <span>Faltan <strong>@restantes días</strong> para tu meta</span>
+                    }
+                    else
+                    {
+                        <span class="meta-lograda">¡Meta alcanzada!</span>
+                    }
+                </span>
+                <a asp-controller="Lector" asp-action="Racha" class="racha-ver-mas">
+                    Ver racha completa
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Acciones -->
+            <div class="card perfil-card acciones">
+                <p class="pcard-label">Acciones</p>
+                <div class="acciones-lista">
+                    <a asp-controller="Lector" asp-action="Estadisticas" class="btn-accion btn-accion--outline">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16">
+                            <line x1="18" y1="20" x2="18" y2="10" />
+                            <line x1="12" y1="20" x2="12" y2="4" />
+                            <line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                        Mis estadísticas
+                    </a>
+                    <a asp-controller="Lector" asp-action="Logros" class="btn-accion btn-accion--outline">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16">
+                            <circle cx="12" cy="8" r="6" />
+                            <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+                        </svg>
+                        Mis logros
+                    </a>
+                    <a asp-controller="Usuario" asp-action="Logout" class="btn-accion btn-accion--danger">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Cerrar sesión
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal foto -->
+<div class="modal-overlay" id="modalFoto" style="display:none">
+    <div class="modal-box">
+        <img id="modalPreviewImg" src="" alt="Vista previa" class="modal-preview-img" />
+        <p class="modal-title">¿Usar esta foto de perfil?</p>
+        <div class="modal-btns">
+            <button class="btn-modal-cancel" onclick="cancelarFoto()">Cancelar</button>
+            <button class="btn-modal-ok" onclick="confirmarFoto()">Actualizar foto</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const diasSeguidos = @Model.DiasSeguidos;
+        const rachaPctTarget = parseFloat('@Model.RachaPct.ToString("F0")');
+
+        function animarContador(el, objetivo, duracion) {
+            const inicio = performance.now();
+            function tick(ahora) {
+                const t = Math.min((ahora - inicio) / duracion, 1);
+                el.textContent = Math.round((1 - Math.pow(1 - t, 3)) * objetivo);
+                if (t < 1) requestAnimationFrame(tick);
+                else { el.textContent = objetivo; mostrarEmoji(objetivo); }
+            }
+            requestAnimationFrame(tick);
+        }
+
+        function mostrarEmoji(dias) {
+            const e = document.getElementById('rachaEmoji');
+            e.textContent = dias >= 30 ? '🔥' : dias >= 14 ? '⚡' : dias >= 7 ? '✨' : dias > 0 ? '📖' : '';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const fill = document.getElementById('rachaFill');
+            const pctLabel = document.getElementById('rachaPct');
+            const rachaNum = document.getElementById('rachaNum');
+            setTimeout(() => {
+                if (fill) fill.style.width = fill.dataset.target;
+                if (rachaNum) animarContador(rachaNum, diasSeguidos, 900);
+                if (pctLabel) {
+                    const start = performance.now();
+                    (function animPct(now) {
+                        const t = Math.min((now - start) / 900, 1);
+                        pctLabel.textContent = Math.round((1 - Math.pow(1 - t, 3)) * rachaPctTarget) + '%';
+                        if (t < 1) requestAnimationFrame(animPct);
+                        else pctLabel.textContent = rachaPctTarget + '%';
+                    })(performance.now());
+                }
+            }, 120);
+        });
+
+        function actualizarHeaderNombre() {
+            const nombre = [
+                document.getElementById('inputNombres').value.trim(),
+                document.getElementById('inputApPat').value.trim(),
+                document.getElementById('inputApMat').value.trim()
+            ].filter(Boolean).join(' ');
+            document.getElementById('headerNombre').textContent = nombre || '@Model.NombreCompleto';
+        }
+
+        document.getElementById('perfilForm').addEventListener('submit', function () {
+            const btn = document.getElementById('btnGuardar');
+            btn.querySelector('.btn-text').style.display = 'none';
+            btn.querySelector('.btn-spinner').style.display = 'inline-flex';
+            btn.disabled = true;
+        });
+
+        const fotoInput = document.getElementById('fotoInput');
+        const fotoNombre = document.getElementById('fotoNombre');
+
+        fotoInput.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                if (!file.type.startsWith('image/')) {
+                    fotoNombre.textContent = 'Solo imágenes';
+                    fotoNombre.style.color = '#b85c38';
+                    this.value = '';
+                    return;
+                }
+                fotoNombre.textContent = file.name;
+                fotoNombre.style.color = '';
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('fotoPreview').src = e.target.result;
+                    document.getElementById('modalPreviewImg').src = e.target.result;
+                    document.getElementById('modalFoto').style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                fotoNombre.textContent = 'Sin archivo';
+            }
+        });
+
+        function cancelarFoto() {
+            document.getElementById('modalFoto').style.display = 'none';
+            fotoInput.value = '';
+            fotoNombre.textContent = 'Sin archivo';
+            document.getElementById('fotoPreview').src = '@(string.IsNullOrEmpty(Model.FotoUrl) ? "/img/user-placeholder.svg" : Model.FotoUrl)';
+        }
+
+        function confirmarFoto() {
+            document.getElementById('modalFoto').style.display = 'none';
+            document.getElementById('fotoForm').submit();
+        }
+
+        document.getElementById('modalFoto').addEventListener('click', function (e) {
+            if (e.target === this) cancelarFoto();
+        });
+
+        document.getElementById('fotoCircle').addEventListener('click', () => fotoInput.click());
+    </script>
+}

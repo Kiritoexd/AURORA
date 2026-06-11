@@ -1,0 +1,408 @@
+﻿/* ─────────────────────────────────────────
+   AURORA — Racha · Estilos
+   Paleta: ivory / terra / ink / sage
+───────────────────────────────────────── */
+
+:root {
+    --ivory: #f7f3ec;
+    --ivory-warm: #efe9de;
+    --ivory-deep: #e6ddd0;
+    --cream: #faf8f4;
+    --ink: #1c1814;
+    --ink-soft: #3d352c;
+    --ink-muted: #7a6e63;
+    --ink-ghost: #b0a498;
+    --terra: #b85c38;
+    --terra-light: #d4795a;
+    --terra-pale: rgba(184,92,56,0.10);
+    --terra-glow: rgba(184,92,56,0.22);
+    --sage: #6b8c6e;
+    --sage-pale: rgba(107,140,110,0.12);
+    --border: rgba(28,24,20,0.10);
+    --border-warm: rgba(184,92,56,0.18);
+    --surface: #ffffff;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow-sm: 0 2px 10px rgba(28,24,20,0.07);
+    --shadow-md: 0 8px 32px rgba(28,24,20,0.10);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.racha-wrapper {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 28px 20px 48px;
+    font-family: 'Figtree', sans-serif;
+    color: var(--ink);
+}
+
+/* ── Hero ──────────────────────────────── */
+.racha-hero {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px 32px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 20px;
+}
+
+.racha-hero__left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.racha-hero__right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Flame */
+.racha-flame-wrap {
+    position: relative;
+    width: 64px;
+    height: 80px;
+}
+
+.racha-flame {
+    width: 64px;
+    height: 80px;
+    filter: drop-shadow(0 4px 12px var(--terra-glow));
+    animation: flame-flicker 2.4s ease-in-out infinite;
+}
+
+@keyframes flame-flicker {
+    0%, 100% {
+        transform: scaleX(1) scaleY(1);
+    }
+
+    25% {
+        transform: scaleX(.96) scaleY(1.03);
+    }
+
+    75% {
+        transform: scaleX(1.03) scaleY(.97);
+    }
+}
+
+.racha-glow-ring {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 10px;
+    background: var(--terra-glow);
+    border-radius: 50%;
+    filter: blur(6px);
+    animation: glow-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+    0%, 100% {
+        opacity: .6;
+        transform: translateX(-50%) scaleX(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateX(-50%) scaleX(1.3);
+    }
+}
+
+/* Days counter */
+.racha-hero__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+.racha-days-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--terra);
+    line-height: 1;
+}
+
+.racha-days-label {
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+/* Message */
+.racha-message {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-style: italic;
+    color: var(--ink-soft);
+    line-height: 1.5;
+}
+
+/* Register button */
+.racha-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--terra);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 20px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .18s var(--ease);
+    box-shadow: 0 3px 12px var(--terra-glow);
+    width: fit-content;
+}
+
+    .racha-btn:hover {
+        background: var(--terra-light);
+        transform: translateY(-1px);
+        box-shadow: 0 5px 18px var(--terra-glow);
+    }
+
+    .racha-btn:active {
+        transform: translateY(0) scale(.97);
+    }
+
+/* Already registered */
+.racha-registered {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--sage-pale);
+    border: 1px solid rgba(107,140,110,0.25);
+    color: var(--sage);
+    border-radius: var(--radius-sm);
+    padding: 9px 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    width: fit-content;
+}
+
+/* ── Progress ──────────────────────────── */
+.racha-progress-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+}
+
+.racha-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.racha-progress-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.racha-progress-fraction {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: var(--terra);
+    font-weight: 500;
+}
+
+.racha-bar-track {
+    height: 8px;
+    background: var(--ivory-deep);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.racha-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--terra) 0%, var(--terra-light) 100%);
+    border-radius: 99px;
+    width: 0%;
+    transition: width .9s var(--ease);
+    box-shadow: 0 0 8px var(--terra-glow);
+}
+
+.racha-remaining {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+}
+
+    .racha-remaining strong {
+        color: var(--terra);
+        font-weight: 600;
+    }
+
+/* ── Logros ────────────────────────────── */
+.racha-logros {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.racha-logros-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.racha-logros-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.logro-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    transition: all .18s var(--ease);
+}
+
+.logro--on {
+    background: var(--terra-pale);
+    border-color: var(--border-warm);
+}
+
+.logro--off {
+    background: var(--ivory);
+    opacity: .75;
+}
+
+.logro--on:hover {
+    transform: translateX(3px);
+    box-shadow: var(--shadow-sm);
+}
+
+.logro-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.logro--on .logro-icon {
+    background: var(--terra-glow);
+    color: var(--terra);
+}
+
+.logro--off .logro-icon {
+    background: var(--ivory-deep);
+    color: var(--ink-ghost);
+}
+
+.logro-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.logro-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.logro-nombre {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+}
+
+.logro-dias {
+    font-size: 0.72rem;
+    color: var(--ink-ghost);
+    letter-spacing: 0.03em;
+}
+
+.logro--on .logro-nombre {
+    color: var(--terra);
+}
+
+.logro-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--terra);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.logro-lock {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-ghost);
+    flex-shrink: 0;
+}
+
+    .logro-lock svg {
+        width: 15px;
+        height: 15px;
+    }
+
+/* ── Responsive ────────────────────────── */
+@media (max-width: 560px) {
+    .racha-hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 24px 20px;
+    }
+
+    .racha-hero__right {
+        align-items: center;
+    }
+
+    .racha-days-num {
+        font-size: 2.4rem;
+    }
+
+    .racha-message {
+        font-size: 1rem;
+    }
+}

@@ -1,0 +1,55 @@
+﻿@model AURORA.Models.LogroCard
+@{
+    var completado = Model.Entrada.Completado;
+    var reclamado = Model.Entrada.Reclamado;
+
+    var badgeTexto = Model.Def.Tipo == "diario" ? "Diario" :
+                     Model.Def.Tipo == "permanente" ? "Permanente" : "Especial";
+
+    var badgeMod = Model.Def.Tipo == "diario" ? "logro-card__badge--diario" :
+                     Model.Def.Tipo == "permanente" ? "logro-card__badge--permanente" : "logro-card__badge--especial";
+
+    var cardClass = reclamado ? "logro-card logro-card--reclamado" :
+                     completado ? "logro-card logro-card--completado" : "logro-card";
+
+    // Fuerza color en el SVG para que currentColor no herede transparente
+    var svgFijo = Model.Def.Icono?.Replace("stroke=\"currentColor\"", "stroke=\"currentColor\" color=\"inherit\"") ?? "";
+}
+
+<article class="@cardClass" data-id="@Model.Def.Id" data-tipo="@Model.Def.Tipo">
+
+    <div class="logro-card__header">
+        <span class="logro-card__icono">@Html.Raw(svgFijo)</span>
+        <div class="logro-card__badge @badgeMod">@badgeTexto</div>
+    </div>
+
+    <h3 class="logro-card__nombre">@Model.Def.Nombre</h3>
+    <p class="logro-card__desc">@Model.Def.Desc</p>
+
+    <div class="logro-card__progreso">
+        <div class="logro-card__barra-bg">
+            <div class="logro-card__barra-fill" style="width:@Model.Pct.ToString("F0")%"></div>
+        </div>
+        <span class="logro-card__fraccion">@Model.Entrada.Progreso / @Model.Def.Meta</span>
+    </div>
+
+    @if (reclamado)
+    {
+        <button class="logro-card__btn logro-card__btn--reclamado" disabled>
+            ✓ Reclamado
+        </button>
+    }
+    else if (completado)
+    {
+        <button class="logro-card__btn" onclick="reclamar('@Model.Def.Id', this)">
+            Reclamar recompensa
+        </button>
+    }
+    else
+    {
+        <button class="logro-card__btn logro-card__btn--progreso" disabled>
+            En progreso…
+        </button>
+    }
+
+</article>

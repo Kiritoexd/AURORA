@@ -1,0 +1,281 @@
+﻿.bib {
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.bib-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.bib-title {
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.bib-import {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.bib-file-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    transition: border-color .15s;
+}
+
+    .bib-file-btn:hover {
+        border-color: rgba(0,0,0,0.25);
+        color: #333;
+    }
+
+    .bib-file-btn i {
+        font-size: 16px;
+    }
+
+.bib-select {
+    background: rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #666;
+}
+
+.bib-btn-import {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+    .bib-btn-import:hover {
+        opacity: .8;
+    }
+
+.bib-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.bib-section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bib-section-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #888;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+}
+
+.bib-badge {
+    background: rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 20px;
+    padding: 1px 9px;
+    font-size: 12px;
+    color: #999;
+}
+
+.bib-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 2.5rem;
+    background: rgba(0,0,0,0.02);
+    border-radius: 12px;
+    border: 1px dashed rgba(0,0,0,0.1);
+}
+
+    .bib-empty i {
+        font-size: 28px;
+        color: #ccc;
+    }
+
+    .bib-empty p {
+        font-size: 13px;
+        color: #bbb;
+    }
+
+.bib-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+}
+
+.bib-card {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color .15s;
+}
+
+    .bib-card:hover {
+        border-color: rgba(0,0,0,0.18);
+    }
+
+.bib-cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 14px 12px;
+    min-height: 150px;
+    text-decoration: none;
+    position: relative;
+    background: #f5f4f2;
+}
+
+.bib-cover-spine {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 12px 0 0 0;
+}
+
+.bib-cover-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a1a1a;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.bib-cover-author {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.bib-progress-wrap {
+    margin-top: 10px;
+    height: 3px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.bib-progress-fill {
+    height: 100%;
+    background: #534AB7;
+}
+
+.bib-progress-label {
+    font-size: 11px;
+    color: #534AB7;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.bib-info {
+    padding: 10px 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bib-info-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a1a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bib-info-meta {
+    font-size: 11px;
+    color: #aaa;
+}
+
+.bib-actions {
+    display: flex;
+    border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.bib-btn-read {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px;
+    font-size: 12px;
+    color: #555;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background .15s;
+}
+
+    .bib-btn-read:hover {
+        background: rgba(0,0,0,0.04);
+        color: #1a1a1a;
+    }
+
+.bib-btn-del {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 12px;
+    background: none;
+    border: none;
+    border-left: 1px solid rgba(0,0,0,0.06);
+    cursor: pointer;
+    color: #bbb;
+    transition: background .15s;
+}
+
+    .bib-btn-del:hover {
+        background: #fff0f0;
+        color: #e24b4a;
+    }
+
+@media (max-width: 480px) {
+    .bib-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .bib-import {
+        width: 100%;
+    }
+}

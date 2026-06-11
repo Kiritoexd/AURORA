@@ -1,0 +1,172 @@
+﻿@model AURORA.Models.RachaViewModel
+@{
+    ViewData["Title"] = "Mi Racha";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="~/css/Racha.css" asp-append-version="true" />
+
+<div class="racha-wrapper">
+
+    <!-- Hero -->
+    <div class="racha-hero">
+        <div class="racha-hero__left">
+            <div class="racha-flame-wrap">
+                <svg class="racha-flame" viewBox="0 0 64 80" fill="none">
+                    <path d="M32 4C32 4 48 20 48 36C48 44.837 40.837 52 32 52C23.163 52 16 44.837 16 36C16 28 22 20 22 20C22 20 20 32 28 36C28 36 24 24 32 4Z" fill="url(#flameGrad)" />
+                    <path d="M32 40C32 40 38 34 38 28C38 24 35 21 32 20C32 20 36 26 32 32C32 32 30 28 27 28C27 28 26 36 32 40Z" fill="url(#innerGrad)" />
+                    <defs>
+                        <linearGradient id="flameGrad" x1="32" y1="4" x2="32" y2="52" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#d4795a" />
+                            <stop offset="100%" stop-color="#b85c38" />
+                        </linearGradient>
+                        <linearGradient id="innerGrad" x1="32" y1="20" x2="32" y2="40" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#efe9de" />
+                            <stop offset="100%" stop-color="#d4795a" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="racha-glow-ring"></div>
+            </div>
+
+            <div class="racha-hero__stat">
+                <span class="racha-days-num">@Model.DiasSeguidos</span>
+                <span class="racha-days-label">días seguidos</span>
+            </div>
+        </div>
+
+        <div class="racha-hero__right">
+            <p class="racha-message">
+                @if (Model.DiasSeguidos == 0)
+                {
+                    <span>Empieza hoy y enciende tu primera racha.</span>
+                }
+                else if (Model.DiasSeguidos < 7)
+                {
+                    <span>¡Buen comienzo! Sigue sumando días.</span>
+                }
+                else if (Model.DiasSeguidos < 30)
+                {
+                    <span>¡Estás en racha! No lo detengas.</span>
+                }
+                else
+                {
+                    <span>¡Disciplina lectora increíble!</span>
+                }
+            </p>
+
+            @if (ViewBag.YaRegistroHoy == true)
+            {
+                <div class="racha-registered">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Lectura registrada hoy
+                </div>
+            }
+            else
+            {
+                <form asp-action="RegistrarLectura" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="racha-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="12" y1="18" x2="12" y2="12" />
+                            <line x1="9" y1="15" x2="15" y2="15" />
+                        </svg>
+                        Registrar lectura de hoy
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Progreso -->
+    <div class="racha-progress-section">
+        <div class="racha-progress-header">
+            <span class="racha-progress-label">Meta de @Model.MetaDias días</span>
+            <span class="racha-progress-fraction">@Model.DiasSeguidos / @Model.MetaDias</span>
+        </div>
+        <div class="racha-bar-track">
+            <div class="racha-bar-fill" id="rachaFill"></div>
+        </div>
+        <p class="racha-remaining">
+            @{
+                var restantes = Model.MetaDias - Model.DiasSeguidos;
+            }
+            @if (restantes > 0)
+            {
+                <span>Faltan <strong>@restantes días</strong> para alcanzar tu meta</span>
+            }
+            else
+            {
+                <span>🎉 ¡Meta alcanzada! Sigue superándote.</span>
+            }
+        </p>
+    </div>
+
+    <!-- Logros -->
+    <div class="racha-logros">
+        <h2 class="racha-logros-title">Logros de racha</h2>
+        <div class="racha-logros-grid">
+            @foreach (var logro in Model.Logros)
+            {
+                <div class="logro-card @(logro.Desbloqueado ? "logro--on" : "logro--off")">
+                    <div class="logro-icon">
+                        @if (logro.Dias == 7)
+                        {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" /></svg>
+                        }
+                        else if (logro.Dias == 15)
+                        {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                        }
+                        else if (logro.Dias == 30)
+                        {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="6" /><path d="M8 14l-4 7h16l-4-7" /></svg>
+                        }
+                        else if (logro.Dias == 60)
+                        {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H13L14 2z" /></svg>
+                        }
+                        else
+                        {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                        }
+                    </div>
+                    <div class="logro-info">
+                        <span class="logro-nombre">@logro.Nombre</span>
+                        <span class="logro-dias">@logro.Dias días</span>
+                    </div>
+                    @if (logro.Desbloqueado)
+                    {
+                        <span class="logro-badge">✓</span>
+                    }
+                    else
+                    {
+                        <span class="logro-lock">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <rect x="5" y="11" width="14" height="10" rx="2" />
+                                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                            </svg>
+                        </span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const fill = document.getElementById("rachaFill");
+        const pct  = Math.min((@Model.DiasSeguidos / (double)@Model.MetaDias) * 100, 100);
+        fill.style.width = "0%";
+        setTimeout(() => { fill.style.width = pct + "%"; }, 200);
+    });
+</script>

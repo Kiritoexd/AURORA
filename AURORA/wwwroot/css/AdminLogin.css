@@ -1,0 +1,228 @@
+﻿/* ── Reset base ── */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ── Fondo animado ── */
+@keyframes al-float1 {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(40px, -30px) scale(1.08);
+    }
+
+    66% {
+        transform: translate(-25px, 20px) scale(0.94);
+    }
+}
+
+@keyframes al-float2 {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(-35px, 25px) scale(1.1);
+    }
+
+    66% {
+        transform: translate(25px, -15px) scale(0.96);
+    }
+}
+
+@keyframes al-float3 {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(20px, 30px) scale(1.05);
+    }
+}
+
+@keyframes al-grid-pulse {
+    0%, 100% {
+        opacity: .03;
+    }
+
+    50% {
+        opacity: .065;
+    }
+}
+
+.al-bg {
+    position: fixed;
+    inset: 0;
+    background: #0f0f0f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.al-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: .2;
+    pointer-events: none;
+}
+
+.al-blob--1 {
+    width: 520px;
+    height: 520px;
+    background: #ff3b3b;
+    top: -140px;
+    left: -140px;
+    animation: al-float1 14s ease-in-out infinite;
+}
+
+.al-blob--2 {
+    width: 420px;
+    height: 420px;
+    background: #ff6a00;
+    bottom: -100px;
+    right: -100px;
+    animation: al-float2 18s ease-in-out infinite;
+}
+
+.al-blob--3 {
+    width: 340px;
+    height: 340px;
+    background: #cc0000;
+    bottom: 10%;
+    left: 35%;
+    animation: al-float3 11s ease-in-out infinite;
+}
+
+.al-grid {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 36px 36px;
+    animation: al-grid-pulse 9s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* ── Card ── */
+.al-card {
+    position: relative;
+    z-index: 10;
+    background: rgba(20, 20, 20, .85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 14px;
+    padding: 40px;
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ── Badge ── */
+.al-badge {
+    display: inline-block;
+    background: rgba(255, 59, 59, .13);
+    color: #ff5555;
+    border: 1px solid rgba(255, 85, 85, .2);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    padding: 4px 10px;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+/* ── Campos ── */
+.al-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    .al-field label {
+        color: #888;
+        font-size: 12px;
+    }
+
+    .al-field input {
+        background: rgba(0,0,0,.4);
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 14px;
+        padding: 10px 14px;
+        outline: none;
+        transition: border-color .2s;
+        width: 100%;
+    }
+
+        .al-field input:focus {
+            border-color: #555;
+        }
+
+/* ── Captcha ── */
+.al-captcha {
+    background: rgba(0,0,0,.4);
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+    .al-captcha span {
+        color: #aaa;
+        font-size: 13px;
+    }
+
+    .al-captcha input {
+        background: rgba(0,0,0,.4);
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 14px;
+        padding: 10px 14px;
+        outline: none;
+        transition: border-color .2s;
+        width: 80px;
+        text-align: center;
+    }
+
+        .al-captcha input:focus {
+            border-color: #555;
+        }
+
+/* ── Botón ── */
+.al-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px;
+    cursor: pointer;
+    transition: opacity .2s;
+    width: 100%;
+    margin-top: 4px;
+}
+
+    .al-btn:hover {
+        opacity: .85;
+    }
+
+/* ── Error ── */
+.al-error {
+    color: #ff5555;
+    font-size: 12px;
+}

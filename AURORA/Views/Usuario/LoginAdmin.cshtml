@@ -1,0 +1,67 @@
+﻿@model AURORA.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Admin Login";
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/AdminLogin.css" asp-append-version="true" />
+
+<div class="al-bg">
+    <div class="al-blob al-blob--1"></div>
+    <div class="al-blob al-blob--2"></div>
+    <div class="al-blob al-blob--3"></div>
+    <div class="al-grid"></div>
+
+    <div class="al-card">
+        <span class="al-badge">Solo desarrollo</span>
+
+        @Html.ValidationSummary(true, "", new { @class = "al-error" })
+
+        <form asp-controller="Usuario" asp-action="LoginAdmin" method="post"
+              style="display:flex;flex-direction:column;gap:16px">
+            @Html.AntiForgeryToken()
+
+            <div class="al-field">
+                <label>Correo</label>
+                <input asp-for="Email" type="email" id="email" />
+                <span asp-validation-for="Email" class="al-error"></span>
+            </div>
+
+            <div class="al-field">
+                <label>Contraseña</label>
+                <input asp-for="Password" type="password" id="password" />
+                <span asp-validation-for="Password" class="al-error"></span>
+            </div>
+
+            <div class="al-captcha">
+                <span id="pregunta"></span>
+                <input type="text" id="captchaInput" placeholder="?" inputmode="numeric" />
+            </div>
+
+            <input type="hidden" name="captchaRespuesta" id="captchaRespuesta" />
+
+            <button type="submit" class="al-btn" onclick="return validar()">
+                Entrar al panel →
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById("email").value = "andresaguilarangelantonio@gmail.com";
+
+    const a = Math.floor(Math.random() * 10) + 1;
+    const b = Math.floor(Math.random() * 10) + 1;
+    document.getElementById("pregunta").textContent = `¿Cuánto es ${a} + ${b}?`;
+
+    function validar() {
+        const resp = parseInt(document.getElementById("captchaInput").value);
+        if (resp !== a + b) {
+            document.getElementById("captchaInput").style.borderColor = "#ff5555";
+            setTimeout(() => document.getElementById("captchaInput").style.borderColor = "#2a2a2a", 600);
+            return false;
+        }
+        document.getElementById("captchaRespuesta").value = resp;
+        return true;
+    }
+</script>

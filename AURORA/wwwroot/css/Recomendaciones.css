@@ -1,0 +1,414 @@
+﻿:root {
+    --ivory: #f7f3ec;
+    --ivory-warm: #efe9de;
+    --ivory-deep: #e6ddd0;
+    --cream: #faf8f4;
+    --ink: #1c1814;
+    --ink-soft: #3d352c;
+    --ink-muted: #7a6e63;
+    --ink-ghost: #b0a498;
+    --terra: #b85c38;
+    --terra-light: #d4795a;
+    --terra-pale: rgba(184,92,56,0.10);
+    --terra-glow: rgba(184,92,56,0.22);
+    --sage: #6b8c6e;
+    --sage-pale: rgba(107,140,110,0.10);
+    --border: rgba(28,24,20,0.10);
+    --border-warm: rgba(184,92,56,0.18);
+    --surface: #ffffff;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow-sm: 0 2px 10px rgba(28,24,20,0.07);
+    --shadow-md: 0 8px 32px rgba(28,24,20,0.10);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.rc-root {
+    background: var(--cream);
+    min-height: 100vh;
+    padding: 2rem 1rem 3rem;
+    font-family: inherit;
+}
+
+.rc-inner {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.rc-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.rc-title {
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 6px;
+}
+
+.rc-subtitle {
+    font-size: 15px;
+    color: var(--ink-muted);
+}
+
+.rc-section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-ghost);
+    margin-bottom: 1rem;
+}
+
+.rc-genres-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.rc-selected-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+    padding: 12px 16px;
+    background: var(--terra-pale);
+    border: 1px solid var(--border-warm);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s var(--ease);
+}
+
+.rc-selected-icon {
+    font-size: 20px;
+    color: var(--terra);
+}
+
+.rc-selected-text {
+    font-size: 14px;
+    color: var(--ink-soft);
+}
+
+.rc-selected-name {
+    font-weight: 500;
+    color: var(--terra);
+}
+
+.rc-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.rc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    background: var(--ivory);
+    color: var(--ink-soft);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.18s var(--ease);
+    font-family: inherit;
+}
+
+    .rc-chip i {
+        font-size: 15px;
+        color: var(--ink-ghost);
+        transition: color 0.18s;
+    }
+
+    .rc-chip:hover {
+        background: var(--ivory-warm);
+        border-color: var(--border-warm);
+        color: var(--ink);
+    }
+
+        .rc-chip:hover i {
+            color: var(--terra-light);
+        }
+
+.rc-chip--active {
+    background: var(--terra-pale);
+    border-color: var(--terra);
+    color: var(--terra);
+    font-weight: 500;
+}
+
+    .rc-chip--active i {
+        color: var(--terra);
+    }
+
+.rc-btn-buscar {
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 11px;
+    background: var(--terra);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.18s var(--ease);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+}
+
+    .rc-btn-buscar:hover {
+        background: var(--terra-light);
+    }
+
+    .rc-btn-buscar:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+.rc-loading-bar {
+    height: 3px;
+    background: var(--ivory-deep);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+    display: none;
+}
+
+    .rc-loading-bar.active {
+        display: block;
+    }
+
+.rc-loading-bar-fill {
+    height: 100%;
+    background: var(--terra);
+    border-radius: 3px;
+    animation: loadBar 1.8s var(--ease) infinite;
+}
+
+@keyframes loadBar {
+    0% {
+        width: 0%;
+        margin-left: 0;
+    }
+
+    60% {
+        width: 80%;
+    }
+
+    100% {
+        width: 100%;
+        margin-left: 100%;
+    }
+}
+
+.rc-results-label {
+    font-size: 14px;
+    color: var(--ink-muted);
+    margin-bottom: 1rem;
+}
+
+    .rc-results-label strong {
+        color: var(--terra);
+    }
+
+.rc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.rc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.4s var(--ease), transform 0.4s var(--ease), box-shadow 0.2s, border-color 0.2s;
+}
+
+    .rc-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .rc-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-warm);
+    }
+
+.rc-card-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--terra);
+    background: var(--terra-pale);
+    border: 1px solid var(--border-warm);
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-bottom: 10px;
+}
+
+.rc-card-titulo {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 5px;
+    line-height: 1.3;
+}
+
+.rc-card-autor {
+    font-size: 13px;
+    color: var(--terra-light);
+    margin-bottom: 10px;
+    font-style: italic;
+}
+
+.rc-card-sinopsis {
+    font-size: 13px;
+    color: var(--ink-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.rc-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.rc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+    border: 1px solid var(--border);
+    font-family: inherit;
+}
+
+.rc-btn--amazon {
+    background: var(--ivory);
+    color: var(--ink-soft);
+    width: 100%;
+}
+
+    .rc-btn--amazon:hover {
+        background: var(--ivory-warm);
+    }
+
+.rc-share-row {
+    display: flex;
+    gap: 7px;
+}
+
+.rc-btn--wa {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border-color: rgba(46,125,50,0.2);
+    flex: 1;
+}
+
+    .rc-btn--wa:hover {
+        background: #c8e6c9;
+    }
+
+.rc-btn--copy {
+    background: var(--ivory);
+    color: var(--ink-muted);
+    flex: 1;
+}
+
+    .rc-btn--copy:hover {
+        background: var(--ivory-warm);
+    }
+
+.rc-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--ink-ghost);
+}
+
+    .rc-empty i {
+        font-size: 40px;
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .rc-empty p {
+        font-size: 15px;
+    }
+
+.rc-skeleton {
+    background: var(--ivory-warm);
+    border-radius: var(--radius);
+    height: 220px;
+    background: linear-gradient(90deg, var(--ivory-warm) 25%, var(--ivory-deep) 50%, var(--ivory-warm) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -400px 0;
+    }
+
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+.rc-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--terra-pale);
+    border: 1px solid var(--border-warm);
+    border-radius: var(--radius-sm);
+    color: var(--terra);
+    font-size: 14px;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 600px) {
+    .rc-title {
+        font-size: 22px;
+    }
+
+    .rc-chip {
+        padding: 7px 11px;
+        font-size: 12px;
+    }
+
+    .rc-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rc-genres-wrap {
+        padding: 1.25rem;
+    }
+}

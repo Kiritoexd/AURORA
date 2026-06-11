@@ -1,0 +1,279 @@
+﻿@model AURORA.Models.LogrosViewModel
+@{
+    ViewData["Title"] = "Logros";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="~/css/Logros.css" asp-append-version="true" />
+
+<!-- HEADER -->
+<div class="logros-header">
+    <div class="logros-header__brand">
+        <div class="logros-header__icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+        </div>
+        <h1 class="logros-header__title">Logros</h1>
+    </div>
+    <div class="logros-header__meta">
+        <span class="logros-header__date">@Model.FechaHoy</span>
+        <div class="logros-header__countdown-wrap">
+            <span class="logros-header__countdown-label">Reset en</span>
+            <span class="logros-header__countdown" id="countdown">--:--:--</span>
+        </div>
+    </div>
+</div>
+
+<!-- PROGRESO GLOBAL -->
+<section class="progreso-global">
+    <div class="progreso-global__info">
+        <span class="progreso-global__label">Progreso del día</span>
+        <span class="progreso-global__fraccion">@Model.CompletadosHoy / @Model.TotalDiarios</span>
+    </div>
+    <div class="progreso-global__track">
+        @{
+            var pctGlobal = Model.TotalDiarios > 0
+                ? (double)Model.CompletadosHoy / Model.TotalDiarios * 100 : 0;
+        }
+        <div class="progreso-global__fill" style="width:@pctGlobal.ToString("F0")%"></div>
+    </div>
+</section>
+
+<!-- TABS -->
+<nav class="tabs">
+    <button class="tab tab--active" data-tab="diarios">Diarios</button>
+    <button class="tab" data-tab="permanentes">Permanentes</button>
+    <button class="tab" data-tab="completados">
+        Completados
+        @if (Model.Completados.Any())
+        {
+            <span class="tab__badge">@Model.Completados.Count</span>
+        }
+    </button>
+</nav>
+
+@{
+    void RenderCard(AURORA.Models.LogroCard card)
+    {
+        var completado = card.Entrada.Completado;
+        var reclamado = card.Entrada.Reclamado;
+
+        var badge = card.Def.Tipo == "diario" ? "Diario"
+                     : card.Def.Tipo == "permanente" ? "Permanente" : "Especial";
+        var cardMod = reclamado ? "logro-card--reclamado"
+                     : completado ? "logro-card--listo" : "";
+
+        <article class="logro-card @cardMod" data-id="@card.Def.Id" data-tipo="@card.Def.Tipo">
+            <div class="logro-card__top">
+                <div class="logro-card__icon-wrap">
+                    @Html.Raw(card.Def.Icono)
+                </div>
+                <span class="logro-card__badge logro-card__badge--@card.Def.Tipo">@badge</span>
+            </div>
+
+            <h3 class="logro-card__nombre">@card.Def.Nombre</h3>
+            <p class="logro-card__desc">@card.Def.Desc</p>
+
+            <div class="logro-card__progreso">
+                <div class="logro-card__track">
+                    <div class="logro-card__fill" style="width:@card.Pct.ToString("F0")%"></div>
+                </div>
+                <span class="logro-card__fraccion">@card.Entrada.Progreso/@card.Def.Meta</span>
+            </div>
+
+            @if (reclamado)
+            {
+                <div class="logro-card__btn logro-card__btn--done">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Reclamado
+                </div>
+            }
+            else if (completado)
+            {
+                <button class="logro-card__btn logro-card__btn--claim"
+                        onclick="reclamar('@card.Def.Id', this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="6" />
+                        <path d="M9 14v7l3-2 3 2v-7" />
+                    </svg>
+                    Reclamar recompensa
+                </button>
+            }
+            else
+            {
+                <div class="logro-card__btn logro-card__btn--pending">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    En progreso
+                </div>
+            }
+        </article>
+    }
+}
+
+<!-- PANEL DIARIOS -->
+<section class="panel panel--active" id="panel-diarios">
+    @if (!Model.Diarios.Any())
+    {
+        <div class="panel__empty">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.4"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            <p>No hay logros diarios disponibles.</p>
+        </div>
+    }
+    else
+    {
+        <div class="logros-grid">
+            @foreach (var card in Model.Diarios) { RenderCard(card); }
+        </div>
+    }
+</section>
+
+<!-- PANEL PERMANENTES -->
+<section class="panel" id="panel-permanentes">
+    @if (!Model.Permanentes.Any())
+    {
+        <div class="panel__empty">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.4"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                <path d="M4 22h16" />
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+            </svg>
+            <p>No hay logros permanentes todavía.</p>
+        </div>
+    }
+    else
+    {
+        <div class="logros-grid">
+            @foreach (var card in Model.Permanentes) { RenderCard(card); }
+        </div>
+    }
+</section>
+
+<!-- PANEL COMPLETADOS -->
+<section class="panel" id="panel-completados">
+    @if (!Model.Completados.Any())
+    {
+        <div class="panel__empty">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.4"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <p>Aún no has completado ningún logro.</p>
+        </div>
+    }
+    else
+    {
+        <div class="logros-grid">
+            @foreach (var card in Model.Completados) { RenderCard(card); }
+        </div>
+    }
+</section>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+    <div class="toast__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="6" />
+            <path d="M9 14v7l3-2 3 2v-7" />
+        </svg>
+    </div>
+    <div class="toast__body">
+        <strong class="toast__titulo" id="toastTitulo"></strong>
+        <span class="toast__msg" id="toastMsg"></span>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Tabs
+        document.querySelectorAll('.tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab--active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('panel--active'));
+                btn.classList.add('tab--active');
+                document.getElementById(`panel-${btn.dataset.tab}`).classList.add('panel--active');
+            });
+        });
+
+        // Countdown
+        function actualizarCountdown() {
+            const ahora  = new Date();
+            const manana = new Date(ahora);
+            manana.setDate(manana.getDate() + 1);
+            manana.setHours(0, 0, 0, 0);
+            const diff = manana - ahora;
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            document.getElementById('countdown').textContent =
+                `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+        setInterval(actualizarCountdown, 1000);
+        actualizarCountdown();
+
+        // Toast
+        function mostrarToast(titulo, msg, ok = true) {
+            document.getElementById('toastTitulo').textContent = titulo;
+            document.getElementById('toastMsg').textContent    = msg;
+            const t = document.getElementById('toast');
+            t.className = 'toast toast--visible' + (ok ? '' : ' toast--error');
+            setTimeout(() => t.className = 'toast', 3800);
+        }
+
+        // Reclamar
+        async function reclamar(id, btn) {
+            btn.disabled = true;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const res   = await fetch('/Lector/Reclamar', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body:    `id=${encodeURIComponent(id)}&__RequestVerificationToken=${encodeURIComponent(token)}`
+            });
+            const data = await res.json();
+            if (data.ok) {
+                // Cambiar UI inmediatamente sin recargar
+                btn.outerHTML = `<div class="logro-card__btn logro-card__btn--done">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Reclamado
+                </div>`;
+                const card = document.querySelector(`[data-id="${id}"]`);
+                if (card) {
+                    card.classList.remove('logro-card--listo');
+                    card.classList.add('logro-card--reclamado');
+                }
+                mostrarToast('¡Logro reclamado!', `"${data.nombre}" guardado permanentemente.`, true);
+            } else {
+                btn.disabled = false;
+                mostrarToast('Error', data.msg, false);
+            }
+        }
+    </script>
+    @Html.AntiForgeryToken()
+}

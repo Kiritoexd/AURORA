@@ -1,0 +1,178 @@
+﻿@model AURORA.Models.AdminIndexViewModel
+@{
+    ViewData["Title"] = "Panel de Administración";
+    var filtro = ViewBag.Filtro as string ?? "todos";
+}
+
+<link rel="stylesheet" href="~/css/Admin.css" asp-append-version="true" />
+
+<div class="adm-root">
+
+    <!-- ── Header ── -->
+    <header class="adm-header">
+        <div class="adm-header-inner">
+            <div>
+                <h1 class="adm-title">Panel de Administración</h1>
+                <p class="adm-subtitle">Gestión de usuarios AURORA</p>
+            </div>
+            <div class="adm-header-stats">
+                <div class="adm-stat-pill">
+                    <i class="ti ti-users" aria-hidden="true"></i>
+                    <span>@Model.TotalActivos activos</span>
+                </div>
+                <div class="adm-stat-pill adm-stat-pill--warn">
+                    <i class="ti ti-user-off" aria-hidden="true"></i>
+                    <span>@Model.TotalBaja de baja</span>
+                </div>
+                <div class="adm-stat-pill adm-stat-pill--teal">
+                    <i class="ti ti-books" aria-hidden="true"></i>
+                    <span>@Model.TotalLibros libros</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="adm-main">
+
+        <!-- ── Toast ── -->
+        @if (TempData["Mensaje"] != null)
+        {
+            var tipo = TempData["Tipo"] as string ?? "success";
+            <div class="adm-toast adm-toast--@tipo">
+                <i class="ti ti-@(tipo == "success" ? "circle-check" : "alert-triangle")" aria-hidden="true"></i>
+                @TempData["Mensaje"]
+            </div>
+        }
+
+        <!-- ── Filtros ── -->
+        <nav class="adm-filters">
+            <a href="@Url.Action("Index", new { filtro = "todos" })"
+               class="adm-filter-btn @(filtro == "todos" ? "active" : "")">
+                <i class="ti ti-list" aria-hidden="true"></i> Todos
+                <span class="adm-filter-count">@(Model.TotalActivos + Model.TotalBaja)</span>
+            </a>
+            <a href="@Url.Action("Index", new { filtro = "activo" })"
+               class="adm-filter-btn @(filtro == "activo" ? "active" : "")">
+                <i class="ti ti-user-check" aria-hidden="true"></i> Activos
+                <span class="adm-filter-count">@Model.TotalActivos</span>
+            </a>
+            <a href="@Url.Action("Index", new { filtro = "baja" })"
+               class="adm-filter-btn adm-filter-btn--warn @(filtro == "baja" ? "active" : "")">
+                <i class="ti ti-user-off" aria-hidden="true"></i> De baja
+                <span class="adm-filter-count">@Model.TotalBaja</span>
+            </a>
+        </nav>
+
+        <!-- ── Tabla de usuarios ── -->
+        @if (!Model.Usuarios.Any())
+        {
+            <div class="adm-empty">
+                <i class="ti ti-users-group" aria-hidden="true"></i>
+                <p>No hay usuarios en esta categoría.</p>
+            </div>
+        }
+        else
+        {
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Correo</th>
+                            <th>Registro</th>
+                            <th class="adm-th-center">Estado</th>
+                            <th class="adm-th-center">Libros</th>
+                            <th class="adm-th-center">Terminados</th>
+                            <th class="adm-th-center">Racha</th>
+                            <th class="adm-th-center">Tiempo</th>
+                            <th class="adm-th-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in Model.Usuarios)
+                        {
+                            var horas = (int)u.TiempoTotal.TotalHours;
+                            var mins = u.TiempoTotal.Minutes;
+                            var tiempoStr = horas > 0 ? $"{horas}h {mins}m" : $"{mins}m";
+                            var iniciales = $"{u.NombreCompleto.Split(' ').FirstOrDefault()?.FirstOrDefault()}{u.NombreCompleto.Split(' ').Skip(1).FirstOrDefault()?.FirstOrDefault()}".ToUpper();
+
+                            <tr class="@(!u.EstaActivo ? "adm-row--baja" : "")">
+                                <td>
+                                    <div class="adm-user-cell">
+                                        @if (!string.IsNullOrEmpty(u.FotoUrl))
+                                        {
+                                            <img src="@u.FotoUrl" class="adm-avatar" alt="@u.NombreCompleto" />
+                                        }
+                                        else
+                                        {
+                                            <div class="adm-avatar adm-avatar--initials">@iniciales</div>
+                                        }
+                                        <div>
+                                            <span class="adm-user-name">@u.NombreCompleto</span>
+                                            <span class="adm-user-rol">@u.Rol</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="adm-email">@u.Email</td>
+                                <td class="adm-date">@u.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                <td class="adm-th-center">
+                                    @if (u.EstaActivo)
+                                    {
+                                        <span class="adm-badge adm-badge--active">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="adm-badge adm-badge--baja">De baja</span>
+                                    }
+                                </td>
+                                <td class="adm-th-center adm-num">@u.TotalLibros</td>
+                                <td class="adm-th-center adm-num">@u.LibrosTerminados</td>
+                                <td class="adm-th-center">
+                                    <span class="adm-racha">
+                                        <i class="ti ti-flame" aria-hidden="true"></i>@u.DiasRacha
+                                    </span>
+                                </td>
+                                <td class="adm-th-center adm-num">@tiempoStr</td>
+                                <td class="adm-th-center">
+                                    <div class="adm-actions">
+                                        <a href="@Url.Action("Detalle", new { id = u.Id })"
+                                           class="adm-btn adm-btn--ghost" title="Ver detalle">
+                                            <i class="ti ti-eye" aria-hidden="true"></i>
+                                        </a>
+
+                                        @if (u.EstaActivo)
+                                        {
+                                            <form asp-action="DarDeBaja" method="post" style="display:inline"
+                                                  onsubmit="return confirm('¿Dar de baja a @u.NombreCompleto?')">
+                                                <input type="hidden" name="id" value="@u.Id" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="adm-btn adm-btn--danger" title="Dar de baja">
+                                                    <i class="ti ti-user-off" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="Reactivar" method="post" style="display:inline">
+                                                <input type="hidden" name="id" value="@u.Id" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="adm-btn adm-btn--success" title="Reactivar">
+                                                    <i class="ti ti-user-check" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </main>
+
+    <footer class="adm-footer">
+        <p>AURORA — Panel de Administración</p>
+    </footer>
+</div>

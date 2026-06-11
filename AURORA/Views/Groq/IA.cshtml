@@ -1,0 +1,317 @@
+﻿@{
+    ViewData["Title"] = "Asistente IA";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="~/css/IA.css" asp-append-version="true" />
+
+<div class="ia-wrapper">
+
+    <!-- Header -->
+    <div class="ia-header">
+        <div class="ia-header__avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+        </div>
+        <div class="ia-header__text">
+            <h1 class="ia-header__title">AURORA</h1>
+            <p class="ia-header__sub">Asistente de lectura inteligente · <span id="statusDot" class="status-dot"></span> en línea</p>
+        </div>
+        <button class="ia-clear-chat" id="clearChatBtn" title="Limpiar conversación">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6V4h6v2" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Chat messages container -->
+    <div class="ia-chat" id="iaChat">
+        <!-- Welcome message (shown only when no history) -->
+        <div class="ia-welcome" id="iaWelcome">
+            <div class="ia-welcome__orb"></div>
+            <p class="ia-welcome__title">Hola, soy AURORA ✦</p>
+            <p class="ia-welcome__text">Tu guía de lectura personal. Cuéntame tu nombre y qué géneros te gustan, ¡y empezamos!</p>
+            <div class="ia-suggestions" id="iaSuggestions">
+                <button class="ia-sug-btn" onclick="usarSugerencia(this)">Me llamo Ana y me gusta la ciencia ficción</button>
+                <button class="ia-sug-btn" onclick="usarSugerencia(this)">¿De qué trata 1984 de George Orwell?</button>
+                <button class="ia-sug-btn" onclick="usarSugerencia(this)">Dame consejos para leer más seguido</button>
+                <button class="ia-sug-btn" onclick="usarSugerencia(this)">¿Qué libro leer si me gustó El Principito?</button>
+            </div>
+        </div>
+        <!-- Messages go here dynamically -->
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="ia-error" id="iaErrorBanner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            @ViewBag.Error
+        </div>
+    }
+
+    <!-- Input bar -->
+    <div class="ia-input-bar">
+        <div class="ia-input-wrap">
+            <textarea id="prompt"
+                      name="prompt"
+                      class="ia-textarea"
+                      rows="1"
+                      placeholder="Pregúntame sobre libros, autores, recomendaciones..."
+                      maxlength="2000"></textarea>
+            <div class="ia-char-count"><span id="charCount">0</span>/2000</div>
+        </div>
+        <button class="ia-send-btn" id="submitBtn" title="Enviar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+        </button>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        // ── State ──────────────────────────────────────────────────
+        const STORAGE_KEY = 'aurora_chat_v1';
+        const MEM_KEY     = 'aurora_memory_v1';
+
+        let chatHistory  = [];   // [{role, content}]  for API
+        let memory       = {};   // {name, likes, dislikes, ...}
+
+        // ── DOM refs ───────────────────────────────────────────────
+        const textarea   = document.getElementById('prompt');
+        const charCount  = document.getElementById('charCount');
+        const submitBtn  = document.getElementById('submitBtn');
+        const chatEl     = document.getElementById('iaChat');
+        const welcomeEl  = document.getElementById('iaWelcome');
+        const clearChat  = document.getElementById('clearChatBtn');
+
+        // ── Restore session ────────────────────────────────────────
+        function loadSession() {
+            try {
+                const saved = sessionStorage.getItem(STORAGE_KEY);
+                if (saved) chatHistory = JSON.parse(saved);
+                const mem = localStorage.getItem(MEM_KEY);
+                if (mem) memory = JSON.parse(mem);
+            } catch(e) { chatHistory = []; memory = {}; }
+        }
+
+        function saveSession() {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory));
+            localStorage.setItem(MEM_KEY, JSON.stringify(memory));
+        }
+
+        // ── Render history on load ─────────────────────────────────
+        function renderHistory() {
+            loadSession();
+            if (chatHistory.length === 0) return;
+            welcomeEl.style.display = 'none';
+            chatHistory.forEach(msg => appendBubble(msg.role, msg.content, false));
+            chatEl.scrollTop = chatEl.scrollHeight;
+        }
+
+        // ── Memory extraction ──────────────────────────────────────
+        function extractMemory(text) {
+            // Name
+            const nameMatch = text.match(/(?:me llamo|soy|mi nombre es)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)/i);
+            if (nameMatch) memory.name = nameMatch[1];
+            // Likes
+            const likeMatch = text.match(/(?:me (?:gusta|encanta|fascina|gustan))\s+(.{3,40}?)(?:\.|,|$)/i);
+            if (likeMatch) {
+                memory.likes = memory.likes || [];
+                memory.likes.push(likeMatch[1].trim());
+                if (memory.likes.length > 10) memory.likes.shift();
+            }
+            saveSession();
+        }
+
+        function buildSystemPrompt() {
+            let sys = `Eres AURORA, una asistente de lectura inteligente, cálida y culta. Respondes siempre en español. Eres apasionada por los libros y ayudas a los usuarios a descubrir lecturas, entender obras y mejorar su hábito lector. Usas un tono amigable pero elegante. Cuando el usuario comparte su nombre o gustos, los recuerdas y los usas naturalmente en la conversación.`;
+
+            if (memory.name) sys += ` El nombre del usuario es ${memory.name}.`;
+            if (memory.likes && memory.likes.length > 0) {
+                sys += ` Sus gustos conocidos incluyen: ${memory.likes.join(', ')}.`;
+            }
+            return sys;
+        }
+
+        // ── Bubble rendering ───────────────────────────────────────
+        function formatMarkdown(text) {
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            const lines = text.split('\n');
+            let out = '', inList = false;
+            lines.forEach(line => {
+                if (/^[\-•]\s+/.test(line)) {
+                    if (!inList) { out += '<ul>'; inList = true; }
+                    out += `<li>${line.replace(/^[\-•]\s+/, '')}</li>`;
+                } else {
+                    if (inList) { out += '</ul>'; inList = false; }
+                    if (line.trim()) out += `<p>${line}</p>`;
+                }
+            });
+            if (inList) out += '</ul>';
+            return out;
+        }
+
+        function appendBubble(role, content, animate = true) {
+            const wrap = document.createElement('div');
+            wrap.className = `ia-msg ia-msg--${role}${animate ? ' ia-msg--new' : ''}`;
+
+            if (role === 'assistant') {
+                const avatar = document.createElement('div');
+                avatar.className = 'ia-msg__avatar';
+                avatar.innerHTML = '✦';
+                wrap.appendChild(avatar);
+            }
+
+            const bubble = document.createElement('div');
+            bubble.className = 'ia-msg__bubble';
+            bubble.innerHTML = role === 'assistant' ? formatMarkdown(content) : `<p>${content}</p>`;
+            wrap.appendChild(bubble);
+
+            chatEl.appendChild(wrap);
+            chatEl.scrollTop = chatEl.scrollHeight;
+        }
+
+        function showTyping() {
+            const wrap = document.createElement('div');
+            wrap.className = 'ia-msg ia-msg--assistant ia-msg--typing';
+            wrap.id = 'typingIndicator';
+            wrap.innerHTML = `
+                <div class="ia-msg__avatar">✦</div>
+                <div class="ia-msg__bubble ia-typing">
+                    <span></span><span></span><span></span>
+                </div>`;
+            chatEl.appendChild(wrap);
+            chatEl.scrollTop = chatEl.scrollHeight;
+        }
+
+        function removeTyping() {
+            const t = document.getElementById('typingIndicator');
+            if (t) t.remove();
+        }
+
+        // ── Send message ───────────────────────────────────────────
+        async function sendMessage() {
+            const text = textarea.value.trim();
+            if (!text) return;
+
+            // Hide welcome
+            welcomeEl.style.display = 'none';
+
+            // Show user bubble
+            appendBubble('user', text);
+
+            // Clear input immediately
+            textarea.value = '';
+            charCount.textContent = '0';
+            textarea.style.height = 'auto';
+            updateCount();
+
+            // Extract memory
+            extractMemory(text);
+
+            // Add to history
+            chatHistory.push({ role: 'user', content: text });
+            saveSession();
+
+            // Disable btn
+            submitBtn.disabled = true;
+            showTyping();
+
+            try {
+                // Mandamos el historial SIN el último mensaje del user (lo manda aparte como newMessage)
+                const historyToSend = chatHistory.slice(0, -1);
+
+                const resp = await fetch('/Groq/ChatApi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        history:    historyToSend,
+                        newMessage: text
+                    })
+                });
+
+                const data = await resp.json();
+                removeTyping();
+
+                if (data.error) throw new Error(data.error);
+
+                const reply = data.content || 'No pude generar una respuesta.';
+                chatHistory.push({ role: 'assistant', content: reply });
+                saveSession();
+                appendBubble('assistant', reply);
+
+            } catch (err) {
+                removeTyping();
+                appendBubble('assistant', '⚠ Ocurrió un error al conectar con el servidor. Intenta de nuevo.');
+                console.error(err);
+            } finally {
+                submitBtn.disabled = false;
+                textarea.focus();
+            }
+        }
+
+        // ── Textarea auto-grow ─────────────────────────────────────
+        function updateCount() {
+            const len = textarea.value.length;
+            charCount.textContent = len;
+            charCount.style.color = len > 1800 ? '#e0943a' : '';
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 140) + 'px';
+        }
+
+        textarea.addEventListener('input', updateCount);
+
+        textarea.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        submitBtn.addEventListener('click', sendMessage);
+
+        function usarSugerencia(btn) {
+            textarea.value = btn.textContent.trim();
+            updateCount();
+            textarea.focus();
+        }
+
+        clearChat.addEventListener('click', () => {
+            if (!confirm('¿Limpiar toda la conversación?')) return;
+            chatHistory = [];
+            saveSession();
+            // Remove bubbles
+            Array.from(chatEl.querySelectorAll('.ia-msg')).forEach(el => el.remove());
+            welcomeEl.style.display = 'flex';
+        });
+
+        // ── Error banner auto-hide ─────────────────────────────────
+        const errBanner = document.getElementById('iaErrorBanner');
+        if (errBanner) setTimeout(() => errBanner.style.opacity = '0', 4000);
+
+        // ── Init ───────────────────────────────────────────────────
+        renderHistory();
+        textarea.focus();
+    </script>
+}

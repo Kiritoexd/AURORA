@@ -1,0 +1,198 @@
+﻿@model List<AURORA.Controllers.LibroRecomendado>
+@{
+    ViewData["Title"] = "Recomendaciones";
+    var generos = new List<(string Valor, string Icono)>
+    {
+        ("Fantasia",        "wand"),
+        ("Ciencia Ficcion", "rocket"),
+        ("Historia",        "building-arch"),
+        ("Filosofia",       "brain"),
+        ("Matematicas",     "math-function"),
+        ("Romance",         "heart"),
+        ("Terror",          "ghost"),
+        ("Misterio",        "search"),
+        ("Biografia",       "user"),
+        ("Psicologia",      "mood-smile"),
+        ("Aventura",        "compass"),
+        ("Clasicos",        "feather"),
+        ("Economia",        "chart-bar"),
+        ("Arte",            "palette"),
+        ("Viajes",          "map"),
+        ("Naturaleza",      "leaf"),
+        ("Politica",        "building"),
+        ("Tecnologia",      "cpu"),
+    };
+    var generoSeleccionado = ViewBag.GeneroSeleccionado as string ?? "";
+}
+
+<link rel="stylesheet" href="~/css/Recomendaciones.css" asp-append-version="true" />
+
+<div class="rc-root">
+    <div class="rc-inner">
+
+        <header class="rc-header">
+            <h1 class="rc-title">Recomendaciones</h1>
+            <p class="rc-subtitle">Elige un genero y descubre tu proxima lectura</p>
+        </header>
+
+        <div class="rc-genres-wrap">
+            <p class="rc-section-label">Selecciona un genero</p>
+
+            <div class="rc-selected-display" id="selectedDisplay">
+                @if (!string.IsNullOrEmpty(generoSeleccionado))
+                {
+                    var iconoActivo = generos.FirstOrDefault(g => g.Valor == generoSeleccionado).Icono ?? "books";
+                    <i class="ti ti-@iconoActivo rc-selected-icon" aria-hidden="true"></i>
+                    <span class="rc-selected-text">Genero seleccionado: <span class="rc-selected-name">@generoSeleccionado</span></span>
+                }
+                else
+                {
+                    <i class="ti ti-books rc-selected-icon" aria-hidden="true"></i>
+                    <span class="rc-selected-text">Ningun genero seleccionado</span>
+                }
+            </div>
+
+            <form asp-action="Recomendar" asp-controller="Recomendaciones" method="post" id="generoForm">
+                <div class="rc-chips">
+                    @foreach (var (valor, icono) in generos)
+                    {
+                        <button type="button" name="genero" value="@valor"
+                                class="rc-chip @(valor == generoSeleccionado ? "rc-chip--active" : "")"
+                                data-genero="@valor" data-icon="@icono">
+                            <i class="ti ti-@icono"></i>
+                            <span>@valor</span>
+                        </button>
+                    }
+                </div>
+                <input type="hidden" name="genero" id="generoInput" value="@generoSeleccionado" />
+                <button type="submit" class="rc-btn-buscar" id="btnBuscar" @(string.IsNullOrEmpty(generoSeleccionado) ? "disabled" : "")>
+                    <i class="ti ti-sparkles" aria-hidden="true"></i>
+                    Obtener recomendaciones
+                </button>
+            </form>
+
+            <div class="rc-loading-bar" id="loadingBar">
+                <div class="rc-loading-bar-fill"></div>
+            </div>
+        </div>
+
+        <div id="rcResults">
+            @if (ViewBag.Error != null)
+            {
+                <div class="rc-error">
+                    <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                    @ViewBag.Error
+                </div>
+            }
+
+            @if (Model != null && Model.Any())
+            {
+                <p class="rc-results-label">5 recomendaciones para <strong>@generoSeleccionado</strong></p>
+                <div class="rc-grid" id="cardsGrid">
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var libro = Model[i];
+                        var amazonQuery = Uri.EscapeDataString(libro.titulo + " " + libro.autor);
+                        var amazonUrl = $"https://www.amazon.com.mx/s?k={amazonQuery}&i=stripbooks";
+                        <div class="rc-card" style="transition-delay:@(i * 80)ms">
+                            <span class="rc-card-badge">@generoSeleccionado</span>
+                            <h3 class="rc-card-titulo">@libro.titulo</h3>
+                            <p class="rc-card-autor">@libro.autor</p>
+                            <p class="rc-card-sinopsis">@libro.sinopsis</p>
+                            <div class="rc-actions">
+                                <a class="rc-btn rc-btn--amazon" href="@amazonUrl" target="_blank" rel="noopener">
+                                    <i class="ti ti-shopping-cart" aria-hidden="true"></i> Buscar en Amazon
+                                </a>
+                                <div class="rc-share-row">
+                                    <button type="button" class="rc-btn rc-btn--wa"
+                                            data-titulo="@libro.titulo" data-autor="@libro.autor"
+                                            data-genero="@generoSeleccionado"
+                                            onclick="compartirWA(this)">
+                                        <i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp
+                                    </button>
+                                    <button type="button" class="rc-btn rc-btn--copy"
+                                            data-titulo="@libro.titulo" data-autor="@libro.autor"
+                                            data-sinopsis="@libro.sinopsis" data-genero="@generoSeleccionado"
+                                            onclick="copiar(this)">
+                                        <i class="ti ti-copy" aria-hidden="true"></i> <span>Copiar</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(generoSeleccionado) && ViewBag.Error == null)
+            {
+                <div class="rc-empty">
+                    <i class="ti ti-book-off" aria-hidden="true"></i>
+                    <p>No se encontraron recomendaciones para <strong>@generoSeleccionado</strong>. Intenta de nuevo.</p>
+                </div>
+            }
+            else if (string.IsNullOrEmpty(generoSeleccionado))
+            {
+                <div class="rc-empty">
+                    <i class="ti ti-books" aria-hidden="true"></i>
+                    <p>Elige un genero arriba para ver tus recomendaciones.</p>
+                </div>
+            }
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const chips = document.querySelectorAll('.rc-chip');
+        const btnBuscar = document.getElementById('btnBuscar');
+        const selectedDisplay = document.getElementById('selectedDisplay');
+        const generoInput = document.getElementById('generoInput');
+        const loadingBar = document.getElementById('loadingBar');
+
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(c => c.classList.remove('rc-chip--active'));
+                chip.classList.add('rc-chip--active');
+                const genero = chip.dataset.genero;
+                const icon = chip.dataset.icon;
+                generoInput.value = genero;
+                selectedDisplay.innerHTML = `
+                    <i class="ti ti-${icon} rc-selected-icon" aria-hidden="true"></i>
+                    <span class="rc-selected-text">Genero seleccionado: <span class="rc-selected-name">${genero}</span></span>
+                `;
+                btnBuscar.disabled = false;
+            });
+        });
+
+        document.getElementById('generoForm').addEventListener('submit', function () {
+            loadingBar.classList.add('active');
+            btnBuscar.disabled = true;
+            btnBuscar.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i> Buscando...';
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.rc-card');
+            if (cards.length > 0) {
+                requestAnimationFrame(() => {
+                    cards.forEach((card, i) => {
+                        setTimeout(() => card.classList.add('visible'), i * 80 + 100);
+                    });
+                });
+            }
+        });
+
+        function compartirWA(el) {
+            const msg = `*${el.dataset.titulo}*\n_${el.dataset.autor}_\n\nGenero: ${el.dataset.genero}\nDescubierto en *AURORA*`;
+            window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+        }
+
+        function copiar(el) {
+            const span = el.querySelector('span');
+            const msg = `${el.dataset.titulo}\n${el.dataset.autor}\n\n${el.dataset.sinopsis}\n\nGenero: ${el.dataset.genero}\nDescubierto en AURORA`;
+            navigator.clipboard.writeText(msg).then(() => {
+                span.textContent = 'Copiado';
+                setTimeout(() => span.textContent = 'Copiar', 2000);
+            });
+        }
+    </script>
+}

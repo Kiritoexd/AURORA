@@ -1,0 +1,69 @@
+﻿@{
+    ViewData["Title"] = "Acceso denegado";
+    Layout = null;
+}
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5faf8;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .card {
+        text-align: center;
+        padding: 48px 40px;
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid rgba(15,110,86,0.10);
+        max-width: 380px;
+    }
+
+    .icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+
+    h1 {
+        font-size: 20px;
+        color: #0f2d24;
+        margin-bottom: 8px;
+    }
+
+    p {
+        font-size: 14px;
+        color: #4a7a66;
+        margin-bottom: 24px;
+    }
+
+    a {
+        display: inline-block;
+        background: #1D9E75;
+        color: #fff;
+        padding: 10px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+        a:hover {
+            opacity: .85;
+        }
+</style>
+
+<div class="card">
+    <div class="icon">🔒</div>
+    <h1>Acceso denegado</h1>
+    <p>No tienes permisos para ver esta página.</p>
+    <a asp-controller="Usuario" asp-action="Login">Volver al inicio</a>
+</div>

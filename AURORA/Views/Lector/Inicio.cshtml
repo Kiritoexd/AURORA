@@ -1,0 +1,37 @@
+﻿@model AURORA.ViewModels.InicioViewModel
+
+<link rel="stylesheet" href="~/css/Inicio.css" asp-append-version="true" />
+
+<div class="ini-hero">
+    <div class="ini-top">
+        <span class="ini-sub">Bienvenido a</span>
+        <span class="ini-brand">Aurora</span>
+        <div class="ini-sep"></div>
+        <span class="ini-nombre">@Model.NombreUsuario</span>
+    </div>
+
+    <div class="ini-chips">
+        <div class="ini-chip ini-chip--books">
+            <i class="ti ti-books" aria-hidden="true"></i>
+            <span class="ini-num">@Model.LibrosTerminados</span>
+            <span class="ini-label">libros leídos</span>
+        </div>
+        <div class="ini-chip ini-chip--reading">
+            <i class="ti ti-book-2" aria-hidden="true"></i>
+            <span class="ini-num">@Model.LibrosLeyendo</span>
+            <span class="ini-label">en curso</span>
+        </div>
+        <div class="ini-chip ini-chip--flame">
+            <i class="ti ti-flame" aria-hidden="true"></i>
+            <span class="ini-num">@Model.DiasRacha</span>
+            <span class="ini-label">días de racha</span>
+        </div>
+        <div class="ini-chip ini-chip--pending">
+            <i class="ti ti-bookmark" aria-hidden="true"></i>
+            <span class="ini-num">@Model.LibrosPendientes</span>
+            <span class="ini-label">pendientes</span>
+        </div>
+    </div>
+
+    <p class="ini-frase">"Un lector vive mil vidas antes de morir."</p>
+</div>

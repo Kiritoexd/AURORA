@@ -1,0 +1,117 @@
+﻿@model AURORA.Models.Tb_UsuarioLibro
+@{
+    ViewData["Title"] = "Abrir Libro";
+}
+
+<link rel="stylesheet" href="~/css/AbrirLibro.css" asp-append-version="true" />
+
+<div class="ab-wrapper">
+    <div class="ab-card">
+        <div class="ab-layout">
+
+            <!-- ── Columna izquierda: portada + meta ── -->
+            <div class="ab-left">
+                <div class="ab-cover">
+                    <canvas id="pdf-cover"></canvas>
+                </div>
+                <div class="ab-meta-row">
+                    <div class="ab-meta-item">
+                        <span class="ab-meta-label">Páginas</span>
+                        <span class="ab-meta-val">@Model.Libro.Paginas</span>
+                    </div>
+                    <div class="ab-meta-item">
+                        <span class="ab-meta-label">Página actual</span>
+                        <span class="ab-meta-val">@Model.UltimaPagina</span>
+                    </div>
+                    <div class="ab-meta-item">
+                        <span class="ab-meta-label">Restantes</span>
+                        <span class="ab-meta-val">@(Model.Libro.Paginas - Model.UltimaPagina)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Columna derecha: info + progreso ── -->
+            <div class="ab-right">
+                <div class="ab-right-top">
+                    <div class="ab-genre-badge">
+                        <i class="ti ti-book" aria-hidden="true"></i>
+                        Libro
+                    </div>
+
+                    <h2 class="ab-titulo">@Model.Libro.Titulo</h2>
+                    <p class="ab-autor">@Model.Libro.Autor</p>
+
+                    <p class="ab-progreso-label">Progreso de lectura</p>
+                    <div class="ab-progreso-track">
+                        <div class="ab-progreso-fill"
+                             id="progresoFill"
+                             style="width: 0%"
+                             data-target="@Model.Progreso%">
+                        </div>
+                    </div>
+                    <div class="ab-progreso-nums">
+                        <span>Página @Model.UltimaPagina de @Model.Libro.Paginas</span>
+                        <span>@Model.Progreso%</span>
+                    </div>
+
+                    <div class="ab-stats">
+                        <div class="ab-stat">
+                            <div class="ab-stat-val">@Model.UltimaPagina</div>
+                            <div class="ab-stat-lbl">Leídas</div>
+                        </div>
+                        <div class="ab-stat">
+                            <div class="ab-stat-val">@(Model.Libro.Paginas - Model.UltimaPagina)</div>
+                            <div class="ab-stat-lbl">Restantes</div>
+                        </div>
+                        <div class="ab-stat">
+                            <div class="ab-stat-val">@Model.Progreso%</div>
+                            <div class="ab-stat-lbl">Completado</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ab-footer">
+                    <span class="ab-ultima">
+                        <i class="ti ti-clock" aria-hidden="true"></i>
+                        Última página: @Model.UltimaPagina
+                    </span>
+                    <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+                        <a asp-controller="Lector" asp-action="Biblioteca" class="ab-btn ab-btn--secondary">
+                            <i class="ti ti-arrow-left" aria-hidden="true"></i>
+                            Regresar
+                        </a>
+                        <a asp-controller="Lector" asp-action="LeerLibro" asp-route-id="@Model.Id" class="ab-btn">
+                            <i class="ti ti-book-2" aria-hidden="true"></i>
+                            Leer libro
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import * as pdfjsLib from '/lib/pdfjs/build/pdf.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdfjs/build/pdf.worker.mjs';
+
+    const url = '/Lector/ProxyPdf?id=@Model.LibroId';
+    const canvas = document.getElementById('pdf-cover');
+    const ctx = canvas.getContext('2d');
+
+    pdfjsLib.getDocument(url).promise.then(pdf => {
+        pdf.getPage(1).then(page => {
+            const viewport = page.getViewport({ scale: 0.35 });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            page.render({ canvasContext: ctx, viewport });
+        });
+    });
+
+    // Animar barra de progreso
+    window.addEventListener('DOMContentLoaded', () => {
+        const fill = document.getElementById('progresoFill');
+        if (fill) setTimeout(() => fill.style.width = fill.dataset.target, 100);
+    });
+</script>

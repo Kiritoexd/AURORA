@@ -1,0 +1,97 @@
+﻿@model AURORA.Models.ResetPasswordViewModel
+@{
+    ViewData["Title"] = "Cambiar contraseña";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — AURORA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@@0,400;0,700;1,400&family=Jost:wght@@200;300;400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/auth-flow.css" asp-append-version="true" />
+</head>
+<body>
+    <main class="af-wrapper">
+        <div class="af-card">
+            <a href="/Usuario/Login" class="af-logo">AURORA</a>
+
+            <div class="af-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+            </div>
+
+            <div class="af-header">
+                <p class="af-eyebrow">Nueva contraseña</p>
+                <h1 class="af-title">Cambiar contraseña</h1>
+                <p class="af-sub">Elige una contraseña segura para proteger tu cuenta.</p>
+            </div>
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="af-alert af-alert--err">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="15"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                    @TempData["Error"]
+                </div>
+            }
+
+            <form asp-action="CambiarContrasena" method="post" id="resetForm" novalidate>
+                <input type="hidden" asp-for="Token" />
+
+                <div class="af-field">
+                    <label class="af-label" for="NewPassword">Nueva contraseña</label>
+                    <div class="af-input-wrap">
+                        <input asp-for="NewPassword" type="password" class="af-input"
+                               id="NewPassword" placeholder="••••••••" required />
+                        <button type="button" class="af-eye" id="toggleNew" aria-label="Mostrar contraseña">
+                            <svg id="eyeOnNew" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                            <svg id="eyeOffNew" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                        </button>
+                    </div>
+                    <span asp-validation-for="NewPassword" class="af-validation"></span>
+                </div>
+
+                <div class="af-field">
+                    <label class="af-label" for="ConfirmPassword">Confirmar contraseña</label>
+                    <div class="af-input-wrap">
+                        <input asp-for="ConfirmPassword" type="password" class="af-input"
+                               id="ConfirmPassword" placeholder="••••••••" required />
+                        <button type="button" class="af-eye" id="toggleConfirm" aria-label="Mostrar contraseña">
+                            <svg id="eyeOnConfirm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                            <svg id="eyeOffConfirm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                        </button>
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="af-validation"></span>
+                </div>
+
+                <button type="submit" class="af-btn">
+                    Guardar contraseña
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                </button>
+            </form>
+
+            <a href="/Usuario/Login" class="af-back">← Volver al inicio de sesión</a>
+        </div>
+    </main>
+    <script>
+            function togglePwd(inputId, onId, offId) {
+                const input  = document.getElementById(inputId);
+                const eyeOn  = document.getElementById(onId);
+                const eyeOff = document.getElementById(offId);
+                const show   = input.type === 'password';
+                input.type        = show ? 'text'  : 'password';
+                eyeOn.style.display  = show ? 'none'  : '';
+                eyeOff.style.display = show ? ''     : 'none';
+            }
+            document.getElementById('toggleNew').addEventListener('click',     () => togglePwd('NewPassword',     'eyeOnNew',     'eyeOffNew'));
+            document.getElementById('toggleConfirm').addEventListener('click', () => togglePwd('ConfirmPassword', 'eyeOnConfirm', 'eyeOffConfirm'));
+            document.getElementById('resetForm').addEventListener('keypress', e => {
+                if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.submit(); }
+            });
+    </script>
+</body>
+</html>

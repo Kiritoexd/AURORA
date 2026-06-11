@@ -1,0 +1,190 @@
+﻿@using System.Text.Json
+@model AURORA.ViewModels.EstadisticasViewModel
+
+<link rel="stylesheet" href="~/css/Estadisticas.css" asp-append-version="true" />
+
+<div class="est-wrapper">
+
+    <div class="est-header">
+        <h1 class="est-title">Estadísticas</h1>
+        <p class="est-subtitle">Tu actividad lectora de un vistazo</p>
+    </div>
+
+    <!-- KPIs -->
+    <div class="est-kpis">
+        <div class="est-kpi">
+            <span class="est-kpi-value">@Model.LibrosTerminados</span>
+            <span class="est-kpi-label">Terminados</span>
+        </div>
+        <div class="est-kpi">
+            <span class="est-kpi-value">@Model.LibrosLeyendo</span>
+            <span class="est-kpi-label">Leyendo</span>
+        </div>
+        <div class="est-kpi">
+            <span class="est-kpi-value">@Model.LibrosPendientes</span>
+            <span class="est-kpi-label">Pendientes</span>
+        </div>
+        <div class="est-kpi">
+            <span class="est-kpi-value">@((Model.MinutosPorMes ?? new List<int>()).Sum())</span>
+            <span class="est-kpi-label">Min. totales</span>
+        </div>
+    </div>
+
+    <!-- Charts grid -->
+    <div class="est-grid">
+
+        <div class="est-card est-card--sm">
+            <p class="est-card-title">Estado de libros</p>
+            <div class="est-chart-wrap">
+                <canvas id="estadoChart"></canvas>
+            </div>
+        </div>
+
+        <div class="est-card est-card--sm">
+            <p class="est-card-title">Géneros favoritos</p>
+            <div class="est-chart-wrap">
+                <canvas id="generosChart"></canvas>
+            </div>
+        </div>
+
+        <div class="est-card est-card--sm">
+            <p class="est-card-title">Libros por año</p>
+            <div class="est-chart-wrap">
+                <canvas id="anualChart"></canvas>
+            </div>
+        </div>
+
+        <div class="est-card est-card--wide">
+            <p class="est-card-title">Tiempo de lectura mensual</p>
+            <div class="est-chart-wrap">
+                <canvas id="tiempoChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const terra     = '#b85c38';
+        const terraLight = '#d4795a';
+        const terraPale = 'rgba(184,92,56,0.10)';
+        const terraGlow = 'rgba(184,92,56,0.18)';
+        const ink       = '#1c1814';
+        const inkMuted  = '#7a6e63';
+        const inkGhost  = '#b0a498';
+        const gridCol   = 'rgba(28,24,20,0.06)';
+        const ivoryDeep = '#e6ddd0';
+
+        Chart.defaults.font.family = "'Figtree', system-ui, sans-serif";
+        Chart.defaults.font.size   = 12;
+        Chart.defaults.color       = inkMuted;
+
+        const axisStyle = {
+        ticks: { color: inkGhost },
+        grid:  { color: gridCol }
+        };
+
+        // ── Estado de libros (doughnut)
+        new Chart(document.getElementById('estadoChart'), {
+        type: 'doughnut',
+        data: {
+        labels: ['Pendientes', 'Leyendo', 'Terminados'],
+        datasets: [{
+        data: [@Model.LibrosPendientes, @Model.LibrosLeyendo, @Model.LibrosTerminados],
+        backgroundColor: [ivoryDeep, terraLight, terra],
+        borderColor: '#fff',
+        borderWidth: 3,
+        hoverOffset: 6
+        }]
+        },
+        options: {
+        cutout: '68%',
+        plugins: {
+        legend: {
+        position: 'bottom',
+        labels: { color: inkMuted, padding: 14, boxWidth: 10, boxHeight: 10 }
+        }
+        }
+        }
+        });
+
+        // ── Géneros (bar horizontal)
+        var generos           = @Html.Raw(JsonSerializer.Serialize(Model.Generos ?? new List<string>()));
+        var cantidadPorGenero = @Html.Raw(JsonSerializer.Serialize(Model.CantidadPorGenero ?? new List<int>()));
+        new Chart(document.getElementById('generosChart'), {
+        type: 'bar',
+        data: {
+        labels: generos,
+        datasets: [{
+        data: cantidadPorGenero,
+        backgroundColor: terraPale,
+        hoverBackgroundColor: terra,
+        borderColor: terraLight,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false
+        }]
+        },
+        options: {
+        indexAxis: 'y',
+        scales: {
+        x: axisStyle,
+        y: { ticks: { color: inkGhost }, grid: { display: false } }
+        },
+        plugins: { legend: { display: false } }
+        }
+        });
+
+        // ── Libros por año (bar)
+        var anios         = @Html.Raw(JsonSerializer.Serialize(Model.Anios ?? new List<string>()));
+        var librosPorAnio = @Html.Raw(JsonSerializer.Serialize(Model.LibrosPorAnio ?? new List<int>()));
+        new Chart(document.getElementById('anualChart'), {
+        type: 'bar',
+        data: {
+        labels: anios,
+        datasets: [{
+        label: 'Libros',
+        data: librosPorAnio,
+        backgroundColor: terraPale,
+        hoverBackgroundColor: terra,
+        borderColor: terraLight,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false
+        }]
+        },
+        options: {
+        scales: { x: axisStyle, y: axisStyle },
+        plugins: { legend: { display: false } }
+        }
+        });
+
+        // ── Tiempo de lectura mensual (line)
+        var meses         = @Html.Raw(JsonSerializer.Serialize(Model.Meses ?? new List<string>()));
+        var minutosPorMes = @Html.Raw(JsonSerializer.Serialize(Model.MinutosPorMes ?? new List<int>()));
+        new Chart(document.getElementById('tiempoChart'), {
+        type: 'line',
+        data: {
+        labels: meses,
+        datasets: [{
+        label: 'Minutos',
+        data: minutosPorMes,
+        borderColor: terra,
+        backgroundColor: terraPale,
+        pointBackgroundColor: terra,
+        pointBorderColor: '#fff',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.4
+        }]
+        },
+        options: {
+        scales: { x: axisStyle, y: axisStyle },
+        plugins: { legend: { display: false } }
+        }
+        });
+    </script>
+}

@@ -1,0 +1,226 @@
+﻿@{
+    ViewData["Title"] = "Bienvenida";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AURORA — Tu biblioteca digital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/Bienvenida.css" asp-append-version="true" />
+</head>
+<body>
+
+    <!-- LOADER -->
+    <div id="pageLoader" class="page-loader">
+        <div class="loader-inner">
+            <div class="loader-wordmark">
+                <span class="lw-a">A</span><span class="lw-u">U</span><span class="lw-r">R</span><span class="lw-o">O</span><span class="lw-r2">R</span><span class="lw-a2">A</span>
+            </div>
+            <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-bg" aria-hidden="true">
+            <div class="bg-texture"></div>
+            <div class="bg-lines"></div>
+            <div class="bg-orb bg-orb--1"></div>
+            <div class="bg-orb bg-orb--2"></div>
+            <div class="bg-orb bg-orb--3"></div>
+        </div>
+
+        <nav class="hero-nav" id="heroNav">
+            <a class="nav-brand" href="#">AURORA</a>
+            <button class="nav-hamburger" id="navHamburger" aria-label="Menú" aria-expanded="false">
+                <span></span><span></span>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a asp-controller="Usuario" asp-action="Login" class="nav-link nav-link--ghost page-link">Iniciar sesión</a>
+                <a asp-controller="Usuario" asp-action="Registro" class="nav-link nav-link--solid page-link">Registrarse</a>
+            </div>
+        </nav>
+
+        <div class="hero-body">
+            <div class="hero-content">
+                <p class="hero-eyebrow reveal">Tu biblioteca digital</p>
+                <h1 class="hero-title reveal">
+                    <span class="ht-line">Lee más.</span>
+                    <em class="ht-line ht-em">Vive mejor.</em>
+                </h1>
+                <p class="hero-desc reveal">Aurora convierte tus PDFs en una experiencia de lectura moderna — estadísticas, rachas y recomendaciones inteligentes.</p>
+                <div class="hero-ctas reveal">
+                    <a asp-controller="Usuario" asp-action="Registro" class="cta cta--primary page-link">
+                        Empezar gratis
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                    </a>
+                    <a asp-controller="Usuario" asp-action="Login" class="cta cta--ghost page-link">Ya tengo cuenta</a>
+                </div>
+            </div>
+
+            <div class="hero-visual reveal" aria-hidden="true">
+                <div class="book-mockup">
+                    <div class="book-spine"></div>
+                    <div class="book-cover">
+                        <div class="book-lines">
+                            <div class="bl bl--1"></div>
+                            <div class="bl bl--2"></div>
+                            <div class="bl bl--3"></div>
+                            <div class="bl bl--4"></div>
+                        </div>
+                        <div class="book-badge">PDF</div>
+                    </div>
+                    <div class="book-shadow"></div>
+                    <div class="float-chip float-chip--1">
+                        <span class="fc-num">80</span>
+                        <span class="fc-lbl">páginas</span>
+                    </div>
+                    <div class="float-chip float-chip--2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="13"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
+                        <span class="fc-lbl">72% leído</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-scroll-hint" aria-hidden="true">
+            <span>Descubre más</span>
+            <div class="scroll-arrow"></div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+        <div class="features-inner">
+            <p class="section-eyebrow scroll-reveal">¿Qué es Aurora?</p>
+            <h2 class="section-title scroll-reveal">Transforma<br><em>tu lectura</em></h2>
+
+            <div class="features-grid">
+                <div class="feat-card scroll-reveal" data-delay="0">
+                    <div class="feat-num">01</div>
+                    <div class="feat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M4 19V5a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v13" />
+                            <path d="M4 19a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1" />
+                        </svg>
+                    </div>
+                    <h3 class="feat-title">Biblioteca personal</h3>
+                    <p class="feat-desc">Importa tus PDFs y organízalos por estado: pendiente, leyendo o terminado.</p>
+                    <div class="feat-tag">ORGANIZACIÓN</div>
+                </div>
+
+                <div class="feat-card scroll-reveal" data-delay="100">
+                    <div class="feat-num">02</div>
+                    <div class="feat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                        </svg>
+                    </div>
+                    <h3 class="feat-title">Estadísticas reales</h3>
+                    <p class="feat-desc">Visualiza tu tiempo de lectura, géneros favoritos y progreso mensual.</p>
+                    <div class="feat-tag">ANÁLISIS</div>
+                </div>
+
+                <div class="feat-card scroll-reveal" data-delay="200">
+                    <div class="feat-num">03</div>
+                    <div class="feat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H13L14 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="feat-title">Rachas y logros</h3>
+                    <p class="feat-desc">Mantén el hábito con rachas diarias y desbloquea logros por tu constancia.</p>
+                    <div class="feat-tag">MOTIVACIÓN</div>
+                </div>
+
+                <div class="feat-card scroll-reveal" data-delay="300">
+                    <div class="feat-num">04</div>
+                    <div class="feat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
+                        </svg>
+                    </div>
+                    <h3 class="feat-title">IA integrada</h3>
+                    <p class="feat-desc">Recomendaciones y resúmenes inteligentes con nuestro asistente de lectura.</p>
+                    <div class="feat-tag">INTELIGENCIA</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS BAND -->
+    <section class="stats-band">
+        <div class="stats-inner">
+            <div class="stat-item scroll-reveal">
+                <div class="stat-num" data-count="500">0</div>
+                <div class="stat-lbl">Libros importados</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item scroll-reveal" data-delay="100">
+                <div class="stat-num" data-count="12">0</div>
+                <div class="stat-lbl">Géneros disponibles</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item scroll-reveal" data-delay="200">
+                <div class="stat-num" data-count="100">0</div>
+                <div class="stat-lbl">% gratis</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINAL — solo un botón de registro -->
+    <section class="final-cta">
+        <div class="final-bg" aria-hidden="true">
+            <div class="fb-orb fb-orb--1"></div>
+            <div class="fb-orb fb-orb--2"></div>
+        </div>
+        <div class="final-inner scroll-reveal">
+            <p class="final-eyebrow">¿Listo para comenzar?</p>
+            <h2 class="final-title">Convierte la lectura<br><em>en un hábito</em></h2>
+            <p class="final-sub">Únete a Aurora y transforma cómo lees, aprendes y creces.</p>
+            <a asp-controller="Usuario" asp-action="Registro" class="cta cta--primary page-link">
+                Crear mi cuenta
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <span class="footer-brand">AURORA</span>
+            <span class="footer-copy">© 2026 Aurora App. Todos los derechos reservados.</span>
+            <button class="footer-terms" id="openTerminos">Términos y condiciones</button>
+        </div>
+    </footer>
+
+    <!-- MODAL TÉRMINOS -->
+    <div id="terminosModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 class="modal-title">Términos y condiciones</h2>
+                <button class="modal-close" id="closeTerminos" aria-label="Cerrar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <p class="modal-body">
+                Aurora es una biblioteca digital que permite a los usuarios subir y gestionar archivos en formato PDF.
+                El usuario es el único responsable del contenido que sube. Aurora no verifica si los documentos cuentan
+                con derechos de autor o licencias de distribución. Al usar la plataforma, aceptas que cualquier archivo
+                cargado es bajo tu responsabilidad exclusiva.
+            </p>
+            <button class="cta cta--primary modal-cta" id="closeTerminos2">Entendido</button>
+        </div>
+    </div>
+
+    <script src="~/js/Bienvenida.js" asp-append-version="true"></script>
+</body>
+</html>

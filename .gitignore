@@ -1,0 +1,27 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# Environment / secrets (NUNCA subir)
+appsettings.Development.json
+*.env
+.env
+
+# Runtime / OS
+*.log
+.DS_Store
+Thumbs.db
+
+# Imágenes de perfiles de usuarios (datos privados)
+AURORA/wwwroot/img/perfiles/*.jpg
+AURORA/wwwroot/img/perfiles/*.jpeg
+AURORA/wwwroot/img/perfiles/*.png
+AURORA/wwwroot/img/perfiles/*.gif
+AURORA/wwwroot/img/perfiles/*.webp
+AURORA/wwwroot/img/perfiles/*.pdf

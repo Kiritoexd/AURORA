@@ -1,0 +1,93 @@
+﻿@{
+    ViewData["Title"] = "Cuenta desactivada";
+    Layout = null;
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5faf8;
+        font-family: 'DM Sans', system-ui, sans-serif;
+    }
+
+    .card {
+        text-align: center;
+        padding: 52px 44px;
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid rgba(192,57,43,0.12);
+        max-width: 420px;
+        width: 90%;
+    }
+
+    .icon {
+        width: 72px;
+        height: 72px;
+        background: #fdecea;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 32px;
+    }
+
+    h1 {
+        font-family: 'DM Serif Display', Georgia, serif;
+        font-size: 22px;
+        font-weight: 400;
+        color: #0f2d24;
+        margin-bottom: 12px;
+    }
+
+    p {
+        font-size: 14px;
+        color: #4a7a66;
+        line-height: 1.7;
+        margin-bottom: 28px;
+    }
+
+    .btn {
+        display: inline-block;
+        background: #1D9E75;
+        color: #fff;
+        padding: 11px 28px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+        .btn:hover {
+            opacity: .85;
+        }
+
+    .footer-note {
+        margin-top: 20px;
+        font-size: 12px;
+        color: #a8cfc2;
+    }
+</style>
+
+<div class="card">
+    <div class="icon">🔒</div>
+    <h1>Tu cuenta ha sido dada de baja</h1>
+    <p>
+        Un administrador ha desactivado tu cuenta.<br>
+        Si crees que esto es un error, contacta con el soporte.
+    </p>
+    <a asp-controller="Usuario" asp-action="Login" class="btn">Volver al inicio</a>
+    <p class="footer-note">AURORA — Plataforma de lectura</p>
+</div>

@@ -1,0 +1,303 @@
+﻿@model AURORA.Models.AdminDetalleUsuarioViewModel
+@{
+    ViewData["Title"] = "Detalle de Usuario";
+    var u = Model.Usuario;
+    var iniciales = $"{u.Nombres?.FirstOrDefault()}{u.ApellidoPaterno?.FirstOrDefault()}".ToUpper();
+    var rachaPct = Model.MetaDias > 0
+        ? Math.Min((double)Model.DiasRacha / Model.MetaDias * 100, 100)
+        : 0;
+}
+<link rel="stylesheet" href="~/css/Admin.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/Detalle.css" asp-append-version="true" />
+
+<div class="adm-root">
+
+    <header class="adm-header">
+        <div class="adm-header-inner">
+            <a href="@Url.Action("Index", "Administrador")" class="adm-back-btn">
+                <i class="ti ti-arrow-left" aria-hidden="true"></i> Volver
+            </a>
+            <h1 class="adm-title">Detalle de usuario</h1>
+        </div>
+    </header>
+
+    <main class="adm-main">
+
+        <div class="adm-detalle-layout">
+
+            <!-- ── Tarjeta de perfil ── -->
+            <aside class="adm-perfil-card">
+
+                @if (!string.IsNullOrEmpty(u.FotoUrl))
+                {
+                    <img src="@u.FotoUrl" class="adm-perfil-foto" alt="@u.Nombres" />
+                }
+                else
+                {
+                    <div class="adm-perfil-avatar">@iniciales</div>
+                }
+
+                <h2 class="adm-perfil-nombre">@u.Nombres @u.ApellidoPaterno @u.ApellidoMaterno</h2>
+                <p class="adm-perfil-email">@u.Email</p>
+
+                <div class="adm-perfil-badges">
+                    @if (!string.IsNullOrEmpty(u.Rol))
+                    {
+                        <span class="adm-badge adm-badge--active">@u.Rol</span>
+                    }
+                    else
+                    {
+                        <span class="adm-badge adm-badge--baja">De baja</span>
+                    }
+                </div>
+
+                <div class="adm-perfil-meta">
+                    <div class="adm-meta-row">
+                        <i class="ti ti-calendar" aria-hidden="true"></i>
+                        <span>Registro: @u.FechaRegistro.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    @if (Model.GeneroFavorito != null)
+                    {
+                        <div class="adm-meta-row">
+                            <i class="ti ti-heart" aria-hidden="true"></i>
+                            <span>Género favorito: <strong>@Model.GeneroFavorito</strong></span>
+                        </div>
+                    }
+                    <div class="adm-meta-row">
+                        <i class="ti ti-clock" aria-hidden="true"></i>
+                        <span>Tiempo total: <strong>@Model.TiempoFormateado</strong></span>
+                    </div>
+                </div>
+
+                <!-- Racha -->
+                <div class="adm-racha-block">
+                    <div class="adm-racha-header">
+                        <i class="ti ti-flame" aria-hidden="true"></i>
+                        <span>Racha: <strong>@Model.DiasRacha días</strong></span>
+                        <span class="adm-racha-meta">/ @Model.MetaDias</span>
+                    </div>
+                    <div class="adm-progress-track">
+                        <div class="adm-progress-fill" style="width: @rachaPct.ToString("F0")%"></div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="adm-perfil-actions">
+                    @if (!string.IsNullOrEmpty(u.Rol))
+                    {
+                        <form asp-action="DarDeBaja" method="post"
+                              onsubmit="return confirm('¿Dar de baja a este usuario?')">
+                            <input type="hidden" name="id" value="@u.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="adm-btn-full adm-btn-full--danger">
+                                <i class="ti ti-user-off" aria-hidden="true"></i> Dar de baja
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="Reactivar" method="post">
+                            <input type="hidden" name="id" value="@u.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="adm-btn-full adm-btn-full--success">
+                                <i class="ti ti-user-check" aria-hidden="true"></i> Reactivar usuario
+                            </button>
+                        </form>
+                    }
+                </div>
+            </aside>
+
+            <!-- ── Panel de libros ── -->
+            <div class="adm-libros-panel">
+
+                <!-- Stats rápidas -->
+                <div class="adm-stats-grid">
+                    <div class="adm-stat-card">
+                        <span class="adm-stat-num">@Model.TotalLibros</span>
+                        <span class="adm-stat-label">Total libros</span>
+                    </div>
+                    <div class="adm-stat-card adm-stat-card--green">
+                        <span class="adm-stat-num">@Model.LibrosTerminados.Count</span>
+                        <span class="adm-stat-label">Terminados</span>
+                    </div>
+                    <div class="adm-stat-card adm-stat-card--teal">
+                        <span class="adm-stat-num">@Model.LibrosLeyendo.Count</span>
+                        <span class="adm-stat-label">Leyendo</span>
+                    </div>
+                    <div class="adm-stat-card adm-stat-card--gray">
+                        <span class="adm-stat-num">@Model.LibrosPendientes.Count</span>
+                        <span class="adm-stat-label">Pendientes</span>
+                    </div>
+                </div>
+
+                <!-- Leyendo actualmente -->
+                @if (Model.LibrosLeyendo.Any())
+                {
+                    <div class="adm-section">
+                        <h3 class="adm-section-title">
+                            <i class="ti ti-book-2" aria-hidden="true"></i> Leyendo ahora
+                        </h3>
+                        <div class="adm-libros-list">
+                            @foreach (var ul in Model.LibrosLeyendo)
+                            {
+                                <div class="adm-libro-row">
+                                    <div class="adm-libro-portada">
+                                        @if (!string.IsNullOrEmpty(ul.Libro?.PortadaUrl))
+                                        {
+                                            <img src="@ul.Libro.PortadaUrl" alt="@ul.Libro.Titulo" />
+                                        }
+                                        else
+                                        {
+                                            <i class="ti ti-book" aria-hidden="true"></i>
+                                        }
+                                    </div>
+                                    <div class="adm-libro-info">
+                                        <span class="adm-libro-titulo">@ul.Libro?.Titulo</span>
+                                        <span class="adm-libro-autor">@ul.Libro?.Autor</span>
+                                        <span class="adm-libro-genero">@ul.Libro?.Genero</span>
+                                        <div class="adm-libro-progress-wrap">
+                                            <div class="adm-libro-progress-bar">
+                                                <div class="adm-libro-progress-fill adm-libro-progress-fill--teal"
+                                                     style="width: @ul.Progreso%"></div>
+                                            </div>
+                                            <span class="adm-libro-pct">@ul.Progreso%</span>
+                                        </div>
+                                    </div>
+                                    <div class="adm-libro-meta">
+                                        @if (ul.UltimoAcceso.HasValue)
+                                        {
+                                            <span class="adm-libro-date">
+                                                <i class="ti ti-clock" aria-hidden="true"></i>
+                                                @ul.UltimoAcceso.Value.ToString("dd/MM/yy")
+                                            </span>
+                                        }
+                                        <span class="adm-libro-pagina">p. @ul.UltimaPagina</span>
+                                        <form asp-action="EliminarLibro" method="post"
+                                              onsubmit="return confirm('¿Eliminar este libro?')">
+                                            <input type="hidden" name="usuarioId" value="@u.Id" />
+                                            <input type="hidden" name="libroId" value="@ul.Libro.Id" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="adm-btn adm-btn--danger" title="Eliminar libro">
+                                                <i class="ti ti-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Terminados -->
+                @if (Model.LibrosTerminados.Any())
+                {
+                    <div class="adm-section">
+                        <h3 class="adm-section-title">
+                            <i class="ti ti-circle-check" aria-hidden="true"></i> Terminados
+                        </h3>
+                        <div class="adm-libros-list">
+                            @foreach (var ul in Model.LibrosTerminados)
+                            {
+                                <div class="adm-libro-row adm-libro-row--done">
+                                    <div class="adm-libro-portada">
+                                        @if (!string.IsNullOrEmpty(ul.Libro?.PortadaUrl))
+                                        {
+                                            <img src="@ul.Libro.PortadaUrl" alt="@ul.Libro.Titulo" />
+                                        }
+                                        else
+                                        {
+                                            <i class="ti ti-book" aria-hidden="true"></i>
+                                        }
+                                    </div>
+                                    <div class="adm-libro-info">
+                                        <span class="adm-libro-titulo">@ul.Libro?.Titulo</span>
+                                        <span class="adm-libro-autor">@ul.Libro?.Autor</span>
+                                        <span class="adm-libro-genero">@ul.Libro?.Genero</span>
+                                        @if (ul.TiempoLectura.HasValue)
+                                        {
+                                            var h = (int)ul.TiempoLectura.Value.TotalHours;
+                                            var m = ul.TiempoLectura.Value.Minutes;
+                                            <span class="adm-libro-tiempo">
+                                                <i class="ti ti-hourglass" aria-hidden="true"></i>
+                                                @(h > 0 ? $"{h}h {m}m" : $"{m}m")
+                                            </span>
+                                        }
+                                    </div>
+                                    <div class="adm-libro-meta">
+                                        <span class="adm-badge adm-badge--active">100%</span>
+                                        <form asp-action="EliminarLibro" method="post"
+                                              onsubmit="return confirm('¿Eliminar este libro?')">
+                                            <input type="hidden" name="usuarioId" value="@u.Id" />
+                                            <input type="hidden" name="libroId" value="@ul.Libro.Id" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="adm-btn adm-btn--danger" title="Eliminar libro">
+                                                <i class="ti ti-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Pendientes -->
+                @if (Model.LibrosPendientes.Any())
+                {
+                    <div class="adm-section">
+                        <h3 class="adm-section-title">
+                            <i class="ti ti-clock-pause" aria-hidden="true"></i> Pendientes
+                        </h3>
+                        <div class="adm-libros-list">
+                            @foreach (var ul in Model.LibrosPendientes)
+                            {
+                                <div class="adm-libro-row adm-libro-row--pending">
+                                    <div class="adm-libro-portada">
+                                        @if (!string.IsNullOrEmpty(ul.Libro?.PortadaUrl))
+                                        {
+                                            <img src="@ul.Libro.PortadaUrl" alt="@ul.Libro.Titulo" />
+                                        }
+                                        else
+                                        {
+                                            <i class="ti ti-book" aria-hidden="true"></i>
+                                        }
+                                    </div>
+                                    <div class="adm-libro-info">
+                                        <span class="adm-libro-titulo">@ul.Libro?.Titulo</span>
+                                        <span class="adm-libro-autor">@ul.Libro?.Autor</span>
+                                        <span class="adm-libro-genero">@ul.Libro?.Genero</span>
+                                    </div>
+                                    <div class="adm-libro-meta">
+                                        <span class="adm-badge" style="background:#f1f0ec;color:#888">0%</span>
+                                        <form asp-action="EliminarLibro" method="post"
+                                              onsubmit="return confirm('¿Eliminar este libro?')">
+                                            <input type="hidden" name="usuarioId" value="@u.Id" />
+                                            <input type="hidden" name="libroId" value="@ul.Libro.Id" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="adm-btn adm-btn--danger" title="Eliminar libro">
+                                                <i class="ti ti-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Model.TotalLibros == 0)
+                {
+                    <div class="adm-empty">
+                        <i class="ti ti-books" aria-hidden="true"></i>
+                        <p>Este usuario no tiene libros registrados.</p>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="adm-footer">
+        <p>AURORA — Panel de Administración</p>
+    </footer>
+</div>

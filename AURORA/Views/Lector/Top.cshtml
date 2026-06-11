@@ -1,0 +1,138 @@
+﻿@model List<AURORA.Models.TopLibroViewModel>
+@{
+    ViewData["Title"] = "Mi TOP";
+}
+
+<link rel="stylesheet" href="~/css/Top.css" asp-append-version="true" />
+
+<div class="top-wrapper">
+
+    <div class="top-header">
+        <h1 class="top-title">Mi TOP de Libros</h1>
+        <p class="top-subtitle">Arrastra las tarjetas para ordenar tu ranking personal</p>
+    </div>
+
+    <div id="topLibros" class="top-grid">
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            var libro = Model[i];
+            <div class="top-card" draggable="true" data-id="@libro.LibroId">
+                <div class="top-card__pos">#@(i + 1)</div>
+                <div class="top-card__body">
+                    <h3 class="top-card__titulo">@libro.Titulo</h3>
+                    <p class="top-card__autor">@libro.Autor</p>
+                    <span class="top-card__genero">@libro.Genero</span>
+                    <div class="top-card__progreso-wrap">
+                        <div class="top-card__progreso-bar">
+                            <div class="top-card__progreso-fill"
+                                 style="width:@libro.Progreso%"></div>
+                        </div>
+                        <span class="top-card__progreso-pct">@libro.Progreso%</span>
+                    </div>
+                </div>
+                <div class="top-card__drag-handle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="5" r="1" fill="currentColor" stroke="none" />
+                        <circle cx="15" cy="5" r="1" fill="currentColor" stroke="none" />
+                        <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none" />
+                        <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" />
+                        <circle cx="9" cy="19" r="1" fill="currentColor" stroke="none" />
+                        <circle cx="15" cy="19" r="1" fill="currentColor" stroke="none" />
+                    </svg>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="top-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.4"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 style="color: var(--ink-ghost)">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+            <p>No tienes libros en tu lista todavía.</p>
+        </div>
+    }
+
+    <div class="top-actions">
+        <button class="top-btn" onclick="guardarOrden()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+            </svg>
+            Guardar TOP
+        </button>
+    </div>
+
+    <div class="top-toast" id="topToast"></div>
+</div>
+
+@section Scripts {
+    <script>
+        // ── Drag & Drop ───────────────────────────────────────────
+        const grid    = document.getElementById('topLibros');
+        let dragging  = null;
+
+        grid.addEventListener('dragstart', e => {
+            dragging = e.target.closest('.top-card');
+            setTimeout(() => dragging?.classList.add('top-card--dragging'), 0);
+        });
+
+        grid.addEventListener('dragend', () => {
+            dragging?.classList.remove('top-card--dragging');
+            dragging = null;
+            actualizarPosiciones();
+        });
+
+        grid.addEventListener('dragover', e => {
+            e.preventDefault();
+            const over = e.target.closest('.top-card');
+            if (!over || over === dragging) return;
+            const rect  = over.getBoundingClientRect();
+            const after = e.clientY > rect.top + rect.height / 2;
+            grid.insertBefore(dragging, after ? over.nextSibling : over);
+        });
+
+        function actualizarPosiciones() {
+            grid.querySelectorAll('.top-card__pos').forEach((el, i) => {
+                el.textContent = `#${i + 1}`;
+            });
+        }
+
+        // ── Guardar orden ─────────────────────────────────────────
+        function guardarOrden() {
+            const cards = document.querySelectorAll(".top-card");
+            const orden = Array.from(cards).map((c, i) => ({
+                libroId: parseInt(c.dataset.id),
+                posicion: i + 1
+            }));
+
+            fetch("/Lector/GuardarOrden", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(orden)
+            })
+            .then(res => res.json())
+            .then(data => mostrarToast(data.mensaje))
+            .catch(err => mostrarToast("Error al guardar TOP", false));
+        }
+
+
+
+        // ── Toast ─────────────────────────────────────────────────
+        function mostrarToast(msg, ok = true) {
+            const t = document.getElementById('topToast');
+            t.textContent = msg;
+            t.className   = `top-toast top-toast--visible ${ok ? '' : 'top-toast--error'}`;
+            setTimeout(() => t.className = 'top-toast', 3000);
+
+        }
+
+    </script>
+    @Html.AntiForgeryToken()
+}

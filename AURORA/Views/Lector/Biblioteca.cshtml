@@ -1,0 +1,106 @@
+﻿@model AURORA.Models.LibrosViewModel
+<link rel="stylesheet" href="~/css/Biblioteca.css" asp-append-version="true" />
+
+<div class="bib">
+    <div class="bib-header">
+        <span class="bib-title">Mi biblioteca</span>
+        <form asp-action="ImportarPdf" asp-controller="Lector"
+              method="post" enctype="multipart/form-data" class="bib-import">
+            <label class="bib-file-btn" id="fileLabel">
+                <i class="ti ti-upload" aria-hidden="true" style="font-size:15px"></i>
+                <span id="fileName">Subir PDF</span>
+                <input type="file" name="pdfLibro" accept=".pdf" required
+                       id="fileInput" style="display:none">
+            </label>
+            <select name="genero" required class="bib-select">
+                <option value="">Género</option>
+                <option>Fantasía</option>
+                <option>Ciencia Ficción</option>
+                <option>Romance</option>
+                <option>Misterio</option>
+                <option>Historia</option>
+                <option>Otro</option>
+            </select>
+            <button type="submit" class="bib-btn-import">
+                <i class="ti ti-plus" aria-hidden="true" style="font-size:14px"></i> Importar
+            </button>
+        </form>
+    </div>
+
+    @foreach (var categoria in new[] { "Leyendo", "Pendientes", "Terminados" })
+    {
+        var lista = categoria == "Leyendo" ? Model.Leyendo :
+                    categoria == "Pendientes" ? Model.Pendientes : Model.Completados;
+        var icon = categoria == "Leyendo" ? "ti-book-2" :
+                    categoria == "Pendientes" ? "ti-bookmark" : "ti-circle-check";
+        var color = categoria == "Leyendo" ? "#534AB7" :
+                    categoria == "Pendientes" ? "#BA7517" : "#1D9E75";
+
+        <div class="bib-section">
+            <div class="bib-section-head">
+                <i class="ti @icon" style="font-size:15px;color:@color" aria-hidden="true"></i>
+                <span class="bib-section-label">@categoria</span>
+                <span class="bib-badge">@lista.Count()</span>
+            </div>
+
+            @if (!lista.Any())
+            {
+                <div class="bib-empty">
+                    <i class="ti ti-books" aria-hidden="true" style="font-size:18px"></i>
+                    <p>Sin libros aquí todavía</p>
+                </div>
+            }
+            else
+            {
+                <div class="bib-grid">
+                    @foreach (var libro in lista)
+                    {
+                        <div class="bib-card">
+                            <a class="bib-cover" href="/Lector/AbrirLibro/@libro.Libro.Id">
+                                <div class="bib-cover-spine"></div>
+                                <span class="bib-cover-title">@libro.Libro.Titulo</span>
+                                <span class="bib-cover-author">@libro.Libro.Autor</span>
+                                @if (categoria == "Leyendo")
+                                {
+                                    <div class="bib-progress-wrap">
+                                        <div class="bib-progress-fill" style="width:@libro.Progreso%"></div>
+                                    </div>
+                                    <span class="bib-progress-label">@libro.Progreso%</span>
+                                }
+                            </a>
+                            <div class="bib-info">
+                                <span class="bib-info-title">@libro.Libro.Titulo</span>
+                                <span class="bib-info-meta">@libro.Libro.Autor</span>
+                                @if (categoria != "Leyendo")
+                                {
+                                    <span class="bib-info-meta">@libro.Libro.Genero · @libro.Libro.Año</span>
+                                }
+                            </div>
+                            <div class="bib-actions">
+                                <form asp-action="LeerLibro" asp-controller="Lector" method="get" style="flex:1">
+                                    <input type="hidden" name="id" value="@libro.Libro.Id" />
+                                    <button type="submit" class="bib-btn-read">
+                                        <i class="ti ti-book" style="font-size:13px" aria-hidden="true"></i> Leer
+                                    </button>
+                                </form>
+                                <form asp-action="EliminarPdf" asp-controller="Lector" method="post">
+                                    <input type="hidden" name="id" value="@libro.Libro.Id" />
+                                    <button type="submit" class="bib-btn-del" aria-label="Eliminar libro">
+                                        <i class="ti ti-trash" style="font-size:13px" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+    document.getElementById('fileInput').addEventListener('change', function () {
+      document.getElementById('fileName').textContent =
+        this.files[0]?.name ?? 'Subir PDF';
+    });
+</script>

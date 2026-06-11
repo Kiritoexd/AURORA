@@ -1,0 +1,191 @@
+﻿@model AURORA.Models.Tb_UsuarioLibro
+@{
+    ViewData["Title"] = "Leer Libro";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.Libro.Titulo — AURORA</title>
+    <link rel="stylesheet" href="~/css/LeerLibro.css" asp-append-version="true" />
+</head>
+<body>
+
+    <div class="lr-root">
+
+        <!-- ── Barra superior ── -->
+        <div class="lr-topbar">
+            <div class="lr-topbar-left">
+                <div>
+                    <div class="lr-titulo">@Model.Libro.Titulo</div>
+                    <div class="lr-autor">@Model.Libro.Autor</div>
+                </div>
+            </div>
+            <div class="lr-topbar-right">
+                <button class="lr-btn-save" id="btnVolver" type="button">
+                    <i class="ti ti-arrow-left" aria-hidden="true"></i>
+                    Volver a Biblioteca
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Cuerpo ── -->
+        <div class="lr-body">
+
+            <!-- Sidebar -->
+            <div class="lr-sidebar" id="lrSidebar">
+                <div>
+                    <div class="lr-sidebar-label">Progreso</div>
+                    <div class="lr-progreso-track">
+                        <div class="lr-progreso-fill"
+                             id="progresoFill"
+                             style="width: 0%"
+                             data-target="@Model.Progreso%">
+                        </div>
+                    </div>
+                    <div class="lr-progreso-nums">
+                        <span id="pagInfo">Pág. @Model.UltimaPagina / @Model.Libro.Paginas</span>
+                        <span id="pctInfo">@Model.Progreso%</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="lr-sidebar-label">Detalles</div>
+                    <div class="lr-stat-group">
+                        <div class="lr-stat">
+                            <span class="lr-stat-k">Página actual</span>
+                            <span class="lr-stat-v" id="statPagActual">@Model.UltimaPagina</span>
+                        </div>
+                        <div class="lr-stat">
+                            <span class="lr-stat-k">Total páginas</span>
+                            <span class="lr-stat-v">@Model.Libro.Paginas</span>
+                        </div>
+                        <div class="lr-stat">
+                            <span class="lr-stat-k">Restantes</span>
+                            <span class="lr-stat-v" id="statRestantes">@(Model.Libro.Paginas - Model.UltimaPagina)</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Back button also in sidebar for easy access -->
+                <div style="margin-top:auto; padding-top:1rem;">
+                    <button class="lr-back--sidebar" id="btnVolverSidebar" type="button">
+                        <i class="ti ti-arrow-left"></i> Volver a Biblioteca
+                    </button>
+                </div>
+            </div>
+
+            <!-- Visor PDF -->
+            <div class="lr-viewer">
+                <div class="lr-page-wrap">
+                    <canvas id="pdf-render" data-url="/Lector/ProxyPdf?id=@(Model.LibroId)"></canvas>
+                </div>
+                <div class="lr-nav">
+                    <button id="prev" class="lr-nav-btn" aria-label="Página anterior">
+                        <i class="ti ti-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <span id="page-info" class="lr-page-info">Página @Model.UltimaPagina</span>
+                    <button id="next" class="lr-nav-btn" aria-label="Página siguiente">
+                        <i class="ti ti-chevron-right" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Hidden form for back-button save-and-exit -->
+    <form id="formVolver" asp-action="GuardarProgreso" asp-controller="Lector" method="post" style="display:none;">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <input type="hidden" id="paginaVolver" name="pagina" value="@Model.UltimaPagina" />
+        <input type="hidden" name="redirectTo" value="Biblioteca" />
+    </form>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <script type="module">
+            import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+
+            const url = '/Lector/ProxyPdf?id=@(Model.LibroId)';
+            const totalPaginas = @Model.Libro.Paginas;
+            let pdfDoc = null, pageNum = @Model.UltimaPagina;
+            const canvas = document.getElementById('pdf-render');
+            const ctx = canvas.getContext('2d');
+            let renderTask = null;
+
+            function updateUI(num) {
+                document.getElementById('page-info').textContent = `Página ${num} de ${pdfDoc.numPages}`;
+                document.getElementById('paginaVolver').value = num;
+                document.getElementById('statPagActual').textContent = num;
+                document.getElementById('statRestantes').textContent = totalPaginas - num;
+                const pct = Math.round(num / totalPaginas * 100);
+                document.getElementById('progresoFill').style.width = pct + '%';
+                document.getElementById('pagInfo').textContent = `Pág. ${num} / ${totalPaginas}`;
+                document.getElementById('pctInfo').textContent = pct + '%';
+            }
+
+            function renderPage(num) {
+                if (renderTask) renderTask.cancel();
+                pdfDoc.getPage(num).then(page => {
+                    const container = document.querySelector('.lr-page-wrap');
+                    const containerWidth = container.clientWidth;
+                    const baseViewport = page.getViewport({ scale: 1 });
+                    const scale = Math.min(containerWidth / baseViewport.width, 2);
+                    const viewport = page.getViewport({ scale });
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    renderTask = page.render({ canvasContext: ctx, viewport });
+                    updateUI(num);
+                });
+            }
+
+            pdfjsLib.getDocument(url).promise.then(pdf => {
+                pdfDoc = pdf;
+                renderPage(pageNum);
+                setTimeout(() => {
+                    document.getElementById('progresoFill').style.width = '@Model.Progreso%';
+                }, 80);
+            }).catch(err => {
+                console.error('Error cargando PDF:', err);
+                const wrap = document.querySelector('.lr-page-wrap');
+                wrap.innerHTML = `<div style="color:#c0392b;padding:2rem;text-align:center;font-family:sans-serif;">
+                    <p><strong>No se pudo cargar el PDF.</strong></p>
+                    <p style="font-size:12px;color:#888;">Error: ${err.message}</p>
+                    <p style="font-size:12px;color:#888;">URL: ${url}</p>
+                </div>`;
+            });
+
+            document.getElementById('prev').addEventListener('click', () => {
+                if (pageNum <= 1) return;
+                pageNum--;
+                renderPage(pageNum);
+            });
+
+            document.getElementById('next').addEventListener('click', () => {
+                if (pageNum >= pdfDoc.numPages) return;
+                pageNum++;
+                renderPage(pageNum);
+            });
+
+            // Re-render on orientation change (prevents freeze)
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => { if (pdfDoc) renderPage(pageNum); }, 350);
+            });
+            window.addEventListener('resize', () => {
+                clearTimeout(window._resizeTimer);
+                window._resizeTimer = setTimeout(() => { if (pdfDoc) renderPage(pageNum); }, 200);
+            });
+
+            // Back buttons — save progress then redirect to Biblioteca
+            function volverConGuardado() {
+                document.getElementById('paginaVolver').value = pageNum;
+                document.getElementById('formVolver').submit();
+            }
+            document.getElementById('btnVolver').addEventListener('click', volverConGuardado);
+            document.getElementById('btnVolverSidebar').addEventListener('click', volverConGuardado);
+    </script>
+
+</body>
+</html>
+
+ 

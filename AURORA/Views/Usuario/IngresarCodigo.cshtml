@@ -1,0 +1,101 @@
+﻿@{
+    ViewData["Title"] = "Ingresar código";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — AURORA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@@0,400;0,700;1,400&family=Jost:wght@@200;300;400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/auth-flow.css" asp-append-version="true" />
+</head>
+<body>
+    <main class="af-wrapper">
+        <div class="af-card">
+            <a href="/Usuario/Login" class="af-logo">AURORA</a>
+
+            <div class="af-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+            </div>
+
+            <div class="af-header">
+                <p class="af-eyebrow">Verificación</p>
+                <h1 class="af-title">Ingresa tu código</h1>
+                <p class="af-sub">Revisá tu correo y escribe los 6 dígitos que te enviamos.</p>
+            </div>
+
+            @if (TempData["ErrorCodigo"] != null)
+            {
+                <div class="af-alert af-alert--err">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="15"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                    @TempData["ErrorCodigo"]
+                </div>
+            }
+
+            <form asp-action="IngresarCodigo" method="post" id="codigoForm" novalidate>
+                <div class="af-otp">
+                    @for (int i = 0; i < 6; i++)
+                    {
+                        <input type="text" maxlength="1" class="af-otp-input"
+                               id="codigo@(i)" name="codigo@(i)"
+                               inputmode="numeric" autocomplete="off"
+                               aria-label="Dígito @(i + 1)" />
+                    }
+                </div>
+                <input type="hidden" id="codigoCompleto" name="codigo" />
+
+                <button type="submit" class="af-btn" id="submitBtn" disabled>
+                    Validar código
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                </button>
+            </form>
+
+            <a href="/Usuario/ForgotPassword" class="af-back">← Reenviar código</a>
+        </div>
+    </main>
+    <script>
+            const inputs    = document.querySelectorAll('.af-otp-input');
+            const hidden    = document.getElementById('codigoCompleto');
+            const submitBtn = document.getElementById('submitBtn');
+
+            function syncHidden() {
+                hidden.value = Array.from(inputs).map(i => i.value).join('');
+                submitBtn.disabled = hidden.value.length < 6;
+            }
+
+            inputs[0].focus();
+
+            inputs.forEach((input, idx) => {
+                input.addEventListener('input', () => {
+                    input.value = input.value.replace(/[^0-9]/g, '').slice(-1);
+                    syncHidden();
+                    if (input.value && idx < inputs.length - 1) inputs[idx + 1].focus();
+                });
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Backspace') {
+                        if (input.value) { input.value = ''; syncHidden(); }
+                        else if (idx > 0) { inputs[idx - 1].focus(); inputs[idx - 1].value = ''; syncHidden(); }
+                        e.preventDefault();
+                    }
+                    if (e.key === 'ArrowLeft'  && idx > 0)               { inputs[idx - 1].focus(); e.preventDefault(); }
+                    if (e.key === 'ArrowRight' && idx < inputs.length - 1) { inputs[idx + 1].focus(); e.preventDefault(); }
+                });
+                input.addEventListener('paste', e => {
+                    const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+                    if (pasted) {
+                        pasted.split('').forEach((ch, j) => { if (inputs[j]) inputs[j].value = ch; });
+                        syncHidden();
+                        inputs[Math.min(pasted.length, inputs.length - 1)].focus();
+                    }
+                    e.preventDefault();
+                });
+            });
+    </script>
+</body>
+</html>
