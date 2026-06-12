@@ -22,7 +22,6 @@
     </header>
 
     <main class="adm-main">
-
         <div class="adm-detalle-layout">
 
             <!-- ── Tarjeta de perfil ── -->
@@ -268,7 +267,7 @@
                                         <span class="adm-libro-genero">@ul.Libro?.Genero</span>
                                     </div>
                                     <div class="adm-libro-meta">
-                                        <span class="adm-badge" style="background:#f1f0ec;color:#888">0%</span>
+                                        <span class="adm-badge" style="background:var(--ivory-deep);color:var(--ink-ghost);border:1px solid var(--border)">0%</span>
                                         <form asp-action="EliminarLibro" method="post"
                                               onsubmit="return confirm('¿Eliminar este libro?')">
                                             <input type="hidden" name="usuarioId" value="@u.Id" />
