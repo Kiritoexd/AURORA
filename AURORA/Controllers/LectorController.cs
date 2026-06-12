@@ -19,7 +19,6 @@ namespace AURORA.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // ← IFileRepository eliminado, ya no se necesita Backblaze
         public LectorController(ApplicationDbContext context)
         {
             _context = context;
@@ -157,22 +156,20 @@ namespace AURORA.Controllers
 
             return RedirectToAction("Perfil");
         }
+
         [Authorize(Roles = "Lector")]
         public IActionResult AbrirLibro(int id)
         {
             int usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
             var usuarioLibro = _context.UsuarioLibros
-     .Include(ul => ul.Libro)
-     .FirstOrDefault(ul => ul.UsuarioId == usuarioId && ul.LibroId == id);
+                .Include(ul => ul.Libro)
+                .FirstOrDefault(ul => ul.UsuarioId == usuarioId && ul.LibroId == id);
 
             if (usuarioLibro == null)
                 return RedirectToAction("Biblioteca");
 
-            // ✅ libroId seguro
             int? libroId = usuarioLibro?.LibroId;
-
-
             int ultimaPagina = usuarioLibro.UltimaPagina;
             int totalPaginas = usuarioLibro.Libro?.Paginas ?? 0;
 
@@ -280,11 +277,8 @@ namespace AURORA.Controllers
             var libro = _context.Libros.FirstOrDefault(l => l.Id == id);
             if (libro != null)
             {
-                // ← eliminada llamada a _fileRepo.DeleteFileAsync, ya no hay archivo en Backblaze
-
                 var usuarioLibros = _context.UsuarioLibros.Where(ul => ul.LibroId == id);
                 _context.UsuarioLibros.RemoveRange(usuarioLibros);
-
                 _context.Libros.Remove(libro);
                 await _context.SaveChangesAsync();
             }
@@ -304,7 +298,6 @@ namespace AURORA.Controllers
             {
                 usuarioLibro.UltimaPagina = pagina;
 
-                // Usa directamente si Paginas es int
                 var paginas = usuarioLibro.Libro.Paginas;
                 usuarioLibro.Progreso = paginas > 0
                     ? (int)Math.Round((decimal)pagina * 100m / paginas)
@@ -321,12 +314,10 @@ namespace AURORA.Controllers
         }
 
 
-
         private int CalcularProgreso(int? totalPaginas, int paginaActual)
         {
             if (!totalPaginas.HasValue || totalPaginas.Value == 0) return 0;
             if (paginaActual > totalPaginas.Value) paginaActual = totalPaginas.Value;
-
             return (int)((paginaActual * 100.0) / totalPaginas.Value);
         }
 
@@ -386,7 +377,6 @@ namespace AURORA.Controllers
             var pdfBytes = ms.ToArray();
             ms.Position = 0;
 
-            // Leer metadatos y texto con PdfPig
             using (var pdf = PdfPigDocument.Open(ms))
             {
                 totalPaginas = pdf.NumberOfPages;
@@ -412,7 +402,7 @@ namespace AURORA.Controllers
                 Paginas = totalPaginas,
                 RutaPdf = null,
                 ContenidoTexto = texto,
-                PdfBytes = pdfBytes      // guardado en PostgreSQL
+                PdfBytes = pdfBytes
             };
 
             _context.Libros.Add(libro);
@@ -435,7 +425,6 @@ namespace AURORA.Controllers
             return RedirectToAction("Biblioteca");
         }
 
-        // Sirve el PDF desde PostgreSQL (sin [Authorize] para que pdfjs pueda fetch con cookies)
         public IActionResult ProxyPdf(int id)
         {
             if (!User.Identity.IsAuthenticated)
@@ -617,6 +606,7 @@ namespace AURORA.Controllers
                 "Lectura nocturna", "Lee después de las 10 PM.", 1),
         };
 
+        [Authorize(Roles = "Lector")]
         public IActionResult Logros()
         {
             var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -627,20 +617,20 @@ namespace AURORA.Controllers
                 .ToHashSet();
 
             var estado = CargarEstado();
-            // No llamar VerificarResetDiario aquí: CargarEstado() ya devuelve
-            // diccionario vacío, y SincronizarLogrosDesdeDB reconstruye todo desde BD.
-            // VerificarResetDiario borraba el progreso justo antes de que se calculara.
             SincronizarLogrosDesdeDB(ref estado, usuarioId, reclamadosDB);
             GuardarEstado(estado);
 
             return View(BuildViewModel(estado, reclamadosDB));
         }
 
+        // ─── FIX PRINCIPAL: ahora reconstruye el estado desde BD antes de validar ───
         [HttpPost]
+        [Authorize(Roles = "Lector")]          // ← agregado
         [ValidateAntiForgeryToken]
         public IActionResult Reclamar(string id)
         {
             var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
             var def = LOGROS_DEF.FirstOrDefault(d => d.Id == id);
             if (def is null)
                 return Json(new { ok = false, msg = "Logro no encontrado." });
@@ -650,7 +640,16 @@ namespace AURORA.Controllers
             if (yaEnBD)
                 return Json(new { ok = false, msg = "Ya reclamado." });
 
+            // ← FIX: reconstruir estado desde BD (CargarEstado() devuelve vacío,
+            //   por eso entrada.Completado siempre era false y nunca dejaba reclamar)
+            var reclamadosDB = _context.LogrosReclamados
+                .Where(l => l.UsuarioId == usuarioId)
+                .Select(l => l.LogroId)
+                .ToHashSet();
+
             var estado = CargarEstado();
+            SincronizarLogrosDesdeDB(ref estado, usuarioId, reclamadosDB);
+
             var entrada = estado.ContainsKey(id) ? estado[id] : new LogroEntrada();
 
             if (!entrada.Completado)
@@ -663,11 +662,6 @@ namespace AURORA.Controllers
                 FechaReclamo = DateTime.UtcNow
             });
             _context.SaveChanges();
-
-            entrada.Reclamado = true;
-            entrada.FechaReclamo = DateTime.UtcNow;
-            estado[id] = entrada;
-            GuardarEstado(estado);
 
             return Json(new { ok = true, nombre = def.Nombre });
         }
@@ -692,20 +686,6 @@ namespace AURORA.Controllers
 
         private const string SESSION_ESTADO = "logros_estado_v1";
         private const string SESSION_FECHA = "logros_ultima_fecha";
-
-        private void VerificarResetDiario(
-            ref Dictionary<string, LogroEntrada> estado,
-            HashSet<string> reclamadosDB)
-        {
-            // El estado se recalcula desde BD en cada visita (no usamos Session).
-            // Simplemente reseteamos diarios no reclamados para que se recalculen.
-            var hoy = DateTime.UtcNow.Date;
-            foreach (var def in LOGROS_DEF.Where(d => d.Tipo == "diario"))
-            {
-                if (reclamadosDB.Contains(def.Id)) continue; // ya reclamado, no tocar
-                estado[def.Id] = new LogroEntrada(); // reset limpio
-            }
-        }
 
         private void SincronizarLogrosDesdeDB(
             ref Dictionary<string, LogroEntrada> estado,
@@ -787,15 +767,12 @@ namespace AURORA.Controllers
 
         private Dictionary<string, LogroEntrada> CargarEstado()
         {
-            // Primero intentar sesión (para la misma request), luego ignorar: en Railway la sesión
-            // no persiste. El estado real se reconstruye siempre desde la BD en SincronizarLogrosDesdeDB.
             return new();
         }
 
         private void GuardarEstado(Dictionary<string, LogroEntrada> estado)
         {
-            // No guardamos en sesión porque no persiste en Railway.
-            // El estado se recalcula desde BD en cada visita.
+            // Estado se recalcula desde BD en cada visita, no se persiste en sesión.
         }
 
         private LogrosViewModel BuildViewModel(
@@ -855,8 +832,5 @@ namespace AURORA.Controllers
             _context.SaveChanges();
             return Ok(new { mensaje = "TOP guardado correctamente" });
         }
-
-        // ← ProxyPdf eliminado: ya no hay URL de Backblaze que proxear.
-        //   El contenido del PDF ahora vive en Tb_Libro.ContenidoTexto (PostgreSQL).
     }
 }
