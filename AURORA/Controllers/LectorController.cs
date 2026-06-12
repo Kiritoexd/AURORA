@@ -627,7 +627,9 @@ namespace AURORA.Controllers
                 .ToHashSet();
 
             var estado = CargarEstado();
-            VerificarResetDiario(ref estado, reclamadosDB);
+            // No llamar VerificarResetDiario aquí: CargarEstado() ya devuelve
+            // diccionario vacío, y SincronizarLogrosDesdeDB reconstruye todo desde BD.
+            // VerificarResetDiario borraba el progreso justo antes de que se calculara.
             SincronizarLogrosDesdeDB(ref estado, usuarioId, reclamadosDB);
             GuardarEstado(estado);
 

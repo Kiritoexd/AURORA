@@ -7,185 +7,274 @@
 <html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f0f0f" />
     <title>@Model.Libro.Titulo — AURORA</title>
-    <link rel="stylesheet" href="~/css/LeerLibro.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" href="~/css/LeerLibro.css" />
 </head>
 <body>
 
-    <div class="lr-root">
+    <div class="lr">
 
-        <!-- ── Barra superior ── -->
-        <div class="lr-topbar">
-            <div class="lr-topbar-left">
-                <div>
-                    <div class="lr-titulo">@Model.Libro.Titulo</div>
-                    <div class="lr-autor">@Model.Libro.Autor</div>
-                </div>
+        <!-- ── Topbar ── -->
+        <header class="lr-bar">
+            <div class="lr-bar__info">
+                <div class="lr-bar__title">@Model.Libro.Titulo</div>
+                <div class="lr-bar__author">@Model.Libro.Autor</div>
             </div>
-            <div class="lr-topbar-right">
-                <button class="lr-btn-save" id="btnVolver" type="button">
-                    <i class="ti ti-arrow-left" aria-hidden="true"></i>
-                    Volver a Biblioteca
+            <div class="lr-bar__actions">
+                <button class="lr-bar__btn lr-bar__btn--back" id="btnGuardar" type="button">
+                    <i class="ti ti-device-floppy"></i>
+                    <span class="lr-hide-xs">Guardar</span>
+                </button>
+                <button class="lr-bar__btn lr-bar__btn--back" id="btnVolver" type="button">
+                    <i class="ti ti-arrow-left"></i>
+                    <span class="lr-hide-xs">Biblioteca</span>
                 </button>
             </div>
-        </div>
+        </header>
 
-        <!-- ── Cuerpo ── -->
-        <div class="lr-body">
-
-            <!-- Sidebar -->
-            <div class="lr-sidebar" id="lrSidebar">
-                <div>
-                    <div class="lr-sidebar-label">Progreso</div>
-                    <div class="lr-progreso-track">
-                        <div class="lr-progreso-fill"
-                             id="progresoFill"
-                             style="width: 0%"
-                             data-target="@Model.Progreso%">
-                        </div>
+        <!-- ── Sidebar (solo desktop) ── -->
+        <aside class="lr-side">
+            <div>
+                <div class="lr-side__label">Progreso</div>
+                <div class="lr-side__track">
+                    <div class="lr-side__fill" id="sideFill" style="width:@Model.Progreso%"></div>
+                </div>
+                <div class="lr-side__nums">
+                    <span id="sidePages">Pág. @Model.UltimaPagina / @Model.Libro.Paginas</span>
+                    <span id="sidePct">@Model.Progreso%</span>
+                </div>
+            </div>
+            <div>
+                <div class="lr-side__label">Detalles</div>
+                <div class="lr-side__stats">
+                    <div class="lr-side__stat">
+                        <span class="lr-side__stat-k">Página actual</span>
+                        <span class="lr-side__stat-v" id="sideActual">@Model.UltimaPagina</span>
                     </div>
-                    <div class="lr-progreso-nums">
-                        <span id="pagInfo">Pág. @Model.UltimaPagina / @Model.Libro.Paginas</span>
-                        <span id="pctInfo">@Model.Progreso%</span>
+                    <div class="lr-side__stat">
+                        <span class="lr-side__stat-k">Total</span>
+                        <span class="lr-side__stat-v">@Model.Libro.Paginas</span>
+                    </div>
+                    <div class="lr-side__stat">
+                        <span class="lr-side__stat-k">Restantes</span>
+                        <span class="lr-side__stat-v" id="sideRest">@(Model.Libro.Paginas - Model.UltimaPagina)</span>
                     </div>
                 </div>
-                <div>
-                    <div class="lr-sidebar-label">Detalles</div>
-                    <div class="lr-stat-group">
-                        <div class="lr-stat">
-                            <span class="lr-stat-k">Página actual</span>
-                            <span class="lr-stat-v" id="statPagActual">@Model.UltimaPagina</span>
-                        </div>
-                        <div class="lr-stat">
-                            <span class="lr-stat-k">Total páginas</span>
-                            <span class="lr-stat-v">@Model.Libro.Paginas</span>
-                        </div>
-                        <div class="lr-stat">
-                            <span class="lr-stat-k">Restantes</span>
-                            <span class="lr-stat-v" id="statRestantes">@(Model.Libro.Paginas - Model.UltimaPagina)</span>
-                        </div>
-                    </div>
-                </div>
-                <!-- Back button also in sidebar for easy access -->
-                <div style="margin-top:auto; padding-top:1rem;">
-                    <button class="lr-back--sidebar" id="btnVolverSidebar" type="button">
-                        <i class="ti ti-arrow-left"></i> Volver a Biblioteca
-                    </button>
+            </div>
+            <button class="lr-side__back" id="btnVolverSide" type="button">
+                <i class="ti ti-arrow-left"></i> Volver a Biblioteca
+            </button>
+        </aside>
+
+        <!-- ── Visor ── -->
+        <main class="lr-viewer" id="viewer">
+            <div class="lr-page">
+                <div class="lr-skeleton" id="skeleton"></div>
+                <canvas id="pdf-canvas" style="display:none"></canvas>
+            </div>
+        </main>
+
+        <!-- ── Nav bar ── -->
+        <nav class="lr-nav">
+            <button class="lr-nav__btn" id="btnPrev" aria-label="Página anterior" disabled>
+                <i class="ti ti-chevron-left"></i>
+            </button>
+
+            <div class="lr-nav__info">
+                <span class="lr-nav__page" id="navPage">@Model.UltimaPagina</span>
+                <div class="lr-nav__bar">
+                    <div class="lr-nav__bar-fill" id="navBarFill" style="width:@Model.Progreso%"></div>
                 </div>
             </div>
 
-            <!-- Visor PDF -->
-            <div class="lr-viewer">
-                <div class="lr-page-wrap">
-                    <canvas id="pdf-render" data-url="/Lector/ProxyPdf?id=@(Model.LibroId)"></canvas>
-                </div>
-                <div class="lr-nav">
-                    <button id="prev" class="lr-nav-btn" aria-label="Página anterior">
-                        <i class="ti ti-chevron-left" aria-hidden="true"></i>
-                    </button>
-                    <span id="page-info" class="lr-page-info">Página @Model.UltimaPagina</span>
-                    <button id="next" class="lr-nav-btn" aria-label="Página siguiente">
-                        <i class="ti ti-chevron-right" aria-hidden="true"></i>
-                    </button>
-                </div>
+            <div class="lr-jump">
+                <input class="lr-jump__input" id="jumpInput" type="number"
+                       min="1" max="@Model.Libro.Paginas"
+                       value="@Model.UltimaPagina"
+                       aria-label="Ir a página" title="Ir a página">
             </div>
 
-        </div>
+            <button class="lr-nav__btn" id="btnNext" aria-label="Página siguiente">
+                <i class="ti ti-chevron-right"></i>
+            </button>
+        </nav>
+
     </div>
 
-    <!-- Hidden form for back-button save-and-exit -->
-    <form id="formVolver" asp-action="GuardarProgreso" asp-controller="Lector" method="post" style="display:none;">
+    <!-- Toast -->
+    <div class="lr-toast" id="toast"></div>
+
+    <!-- Hidden forms -->
+    <form id="formGuardar" asp-action="GuardarProgreso" asp-controller="Lector" method="post" style="display:none">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <input type="hidden" id="paginaGuardar" name="pagina" value="@Model.UltimaPagina" />
+    </form>
+    <form id="formVolver" asp-action="GuardarProgreso" asp-controller="Lector" method="post" style="display:none">
         <input type="hidden" name="id" value="@Model.Id" />
         <input type="hidden" id="paginaVolver" name="pagina" value="@Model.UltimaPagina" />
         <input type="hidden" name="redirectTo" value="Biblioteca" />
     </form>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/icons-webfont@latest/tabler-icons.min.css">
     <script type="module">
             import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
-            const url = '/Lector/ProxyPdf?id=@(Model.LibroId)';
-            const totalPaginas = @Model.Libro.Paginas;
-            let pdfDoc = null, pageNum = @Model.UltimaPagina;
-            const canvas = document.getElementById('pdf-render');
-            const ctx = canvas.getContext('2d');
-            let renderTask = null;
+            const PDF_URL     = '/Lector/ProxyPdf?id=@(Model.LibroId)';
+            const TOTAL_PAGS  = @Model.Libro.Paginas;
+            const canvas      = document.getElementById('pdf-canvas');
+            const skeleton    = document.getElementById('skeleton');
+            const ctx         = canvas.getContext('2d');
+
+            let pdfDoc    = null;
+            let pageNum   = @Model.UltimaPagina;
+            let rendering = false;
+            let pendingPage = null;
+
+            // ── Render con devicePixelRatio para alta calidad en móvil ──
+            async function renderPage(num) {
+                if (rendering) { pendingPage = num; return; }
+                rendering = true;
+
+                const page     = await pdfDoc.getPage(num);
+                const viewer   = document.getElementById('viewer');
+                const maxW     = viewer.clientWidth - 32;  // padding
+                const dpr      = Math.min(window.devicePixelRatio || 1, 3); // hasta 3x
+                const baseVP   = page.getViewport({ scale: 1 });
+                const scale    = maxW / baseVP.width;
+                const viewport = page.getViewport({ scale });
+
+                // Canvas físico = lógico × dpr (resolución real)
+                canvas.width  = Math.floor(viewport.width  * dpr);
+                canvas.height = Math.floor(viewport.height * dpr);
+                canvas.style.width  = Math.floor(viewport.width)  + 'px';
+                canvas.style.height = Math.floor(viewport.height) + 'px';
+
+                const renderCtx = { canvasContext: ctx, viewport: page.getViewport({ scale: scale * dpr }) };
+                await page.render(renderCtx).promise;
+
+                skeleton.style.display = 'none';
+                canvas.style.display   = 'block';
+
+                updateUI(num);
+                rendering = false;
+                if (pendingPage !== null) {
+                    const p = pendingPage; pendingPage = null; renderPage(p);
+                }
+            }
 
             function updateUI(num) {
-                document.getElementById('page-info').textContent = `Página ${num} de ${pdfDoc.numPages}`;
-                document.getElementById('paginaVolver').value = num;
-                document.getElementById('statPagActual').textContent = num;
-                document.getElementById('statRestantes').textContent = totalPaginas - num;
-                const pct = Math.round(num / totalPaginas * 100);
-                document.getElementById('progresoFill').style.width = pct + '%';
-                document.getElementById('pagInfo').textContent = `Pág. ${num} / ${totalPaginas}`;
-                document.getElementById('pctInfo').textContent = pct + '%';
+                const pct = TOTAL_PAGS > 0 ? Math.round(num / TOTAL_PAGS * 100) : 0;
+
+                document.getElementById('navPage').textContent    = `${num} / ${TOTAL_PAGS}`;
+                document.getElementById('navBarFill').style.width = pct + '%';
+                document.getElementById('paginaGuardar').value    = num;
+                document.getElementById('paginaVolver').value     = num;
+
+                const jumpInput = document.getElementById('jumpInput');
+                if (document.activeElement !== jumpInput) jumpInput.value = num;
+
+                // Sidebar
+                const sideActual = document.getElementById('sideActual');
+                const sideRest   = document.getElementById('sideRest');
+                const sideFill   = document.getElementById('sideFill');
+                const sidePages  = document.getElementById('sidePages');
+                const sidePct    = document.getElementById('sidePct');
+                if (sideActual) sideActual.textContent = num;
+                if (sideRest)   sideRest.textContent   = TOTAL_PAGS - num;
+                if (sideFill)   sideFill.style.width   = pct + '%';
+                if (sidePages)  sidePages.textContent  = `Pág. ${num} / ${TOTAL_PAGS}`;
+                if (sidePct)    sidePct.textContent     = pct + '%';
+
+                document.getElementById('btnPrev').disabled = num <= 1;
+                document.getElementById('btnNext').disabled = num >= pdfDoc.numPages;
             }
 
-            function renderPage(num) {
-                if (renderTask) renderTask.cancel();
-                pdfDoc.getPage(num).then(page => {
-                    const container = document.querySelector('.lr-page-wrap');
-                    const containerWidth = container.clientWidth;
-                    const baseViewport = page.getViewport({ scale: 1 });
-                    const scale = Math.min(containerWidth / baseViewport.width, 2);
-                    const viewport = page.getViewport({ scale });
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    renderTask = page.render({ canvasContext: ctx, viewport });
-                    updateUI(num);
-                });
+            function showToast(msg) {
+                const t = document.getElementById('toast');
+                t.textContent = msg;
+                t.classList.add('lr-toast--show');
+                setTimeout(() => t.classList.remove('lr-toast--show'), 2200);
             }
 
-            pdfjsLib.getDocument(url).promise.then(pdf => {
-                pdfDoc = pdf;
+            // ── Carga del PDF ──
+            try {
+                pdfDoc = await pdfjsLib.getDocument(PDF_URL).promise;
                 renderPage(pageNum);
-                setTimeout(() => {
-                    document.getElementById('progresoFill').style.width = '@Model.Progreso%';
-                }, 80);
-            }).catch(err => {
-                console.error('Error cargando PDF:', err);
-                const wrap = document.querySelector('.lr-page-wrap');
-                wrap.innerHTML = `<div style="color:#c0392b;padding:2rem;text-align:center;font-family:sans-serif;">
-                    <p><strong>No se pudo cargar el PDF.</strong></p>
-                    <p style="font-size:12px;color:#888;">Error: ${err.message}</p>
-                    <p style="font-size:12px;color:#888;">URL: ${url}</p>
-                </div>`;
+            } catch(err) {
+                skeleton.style.display = 'none';
+                document.querySelector('.lr-page').innerHTML =
+                    `<div class="lr-error">
+                        <i class="ti ti-file-x"></i>
+                        <strong>No se pudo cargar el PDF</strong>
+                        <p>${err.message}</p>
+                     </div>`;
+            }
+
+            // ── Navegación ──
+            document.getElementById('btnPrev').addEventListener('click', () => {
+                if (pageNum > 1) { pageNum--; renderPage(pageNum); }
+            });
+            document.getElementById('btnNext').addEventListener('click', () => {
+                if (pdfDoc && pageNum < pdfDoc.numPages) { pageNum++; renderPage(pageNum); }
             });
 
-            document.getElementById('prev').addEventListener('click', () => {
-                if (pageNum <= 1) return;
-                pageNum--;
-                renderPage(pageNum);
+            // Swipe táctil
+            let touchStartX = 0;
+            canvas.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+            canvas.addEventListener('touchend', e => {
+                const dx = e.changedTouches[0].clientX - touchStartX;
+                if (Math.abs(dx) < 40) return;
+                if (dx < 0 && pdfDoc && pageNum < pdfDoc.numPages) { pageNum++; renderPage(pageNum); }
+                else if (dx > 0 && pageNum > 1)                    { pageNum--; renderPage(pageNum); }
+            }, { passive: true });
+
+            // Jump-to-page
+            const jumpInput = document.getElementById('jumpInput');
+            jumpInput.addEventListener('change', () => {
+                const v = parseInt(jumpInput.value);
+                if (!isNaN(v) && pdfDoc && v >= 1 && v <= pdfDoc.numPages) {
+                    pageNum = v; renderPage(pageNum);
+                }
             });
 
-            document.getElementById('next').addEventListener('click', () => {
-                if (pageNum >= pdfDoc.numPages) return;
-                pageNum++;
-                renderPage(pageNum);
+            // Teclado
+            document.addEventListener('keydown', e => {
+                if (e.target === jumpInput) return;
+                if ((e.key === 'ArrowRight' || e.key === 'ArrowDown') && pdfDoc && pageNum < pdfDoc.numPages)
+                    { pageNum++; renderPage(pageNum); }
+                if ((e.key === 'ArrowLeft' || e.key === 'ArrowUp') && pageNum > 1)
+                    { pageNum--; renderPage(pageNum); }
             });
 
-            // Re-render on orientation change (prevents freeze)
-            window.addEventListener('orientationchange', () => {
-                setTimeout(() => { if (pdfDoc) renderPage(pageNum); }, 350);
-            });
-            window.addEventListener('resize', () => {
-                clearTimeout(window._resizeTimer);
-                window._resizeTimer = setTimeout(() => { if (pdfDoc) renderPage(pageNum); }, 200);
+            // Re-render on resize/orientation
+            let resizeTimer;
+            const onResize = () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => { if (pdfDoc) renderPage(pageNum); }, 250);
+            };
+            window.addEventListener('resize', onResize);
+            window.addEventListener('orientationchange', () => setTimeout(onResize, 400));
+
+            // ── Botones guardar / volver ──
+            document.getElementById('btnGuardar').addEventListener('click', () => {
+                document.getElementById('paginaGuardar').value = pageNum;
+                document.getElementById('formGuardar').submit();
+                showToast('Progreso guardado ✓');
             });
 
-            // Back buttons — save progress then redirect to Biblioteca
-            function volverConGuardado() {
+            function volverGuardando() {
                 document.getElementById('paginaVolver').value = pageNum;
                 document.getElementById('formVolver').submit();
             }
-            document.getElementById('btnVolver').addEventListener('click', volverConGuardado);
-            document.getElementById('btnVolverSidebar').addEventListener('click', volverConGuardado);
+            document.getElementById('btnVolver').addEventListener('click', volverGuardando);
+            const btnSide = document.getElementById('btnVolverSide');
+            if (btnSide) btnSide.addEventListener('click', volverGuardando);
     </script>
 
 </body>
 </html>
-
- 
