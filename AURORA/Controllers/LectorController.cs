@@ -207,17 +207,7 @@ namespace AURORA.Controllers
                     .Select(g => g.Count())
                     .ToList(),
 
-                Meses = usuarioLibros
-                    .Where(u => u.UltimoAcceso.HasValue)
-                    .GroupBy(u => u.UltimoAcceso.Value.ToString("MMMM"))
-                    .Select(g => g.Key)
-                    .ToList(),
-
-                MinutosPorMes = usuarioLibros
-                    .Where(u => u.UltimoAcceso != null)
-                    .GroupBy(u => u.UltimoAcceso.Value.Month)
-                    .Select(g => (int)g.Sum(x => x.TiempoLectura.HasValue ? x.TiempoLectura.Value.TotalMinutes : 0))
-                    .ToList(),
+                
 
                 Anios = usuarioLibros
                     .Where(u => u.UltimoAcceso.HasValue)
@@ -231,15 +221,7 @@ namespace AURORA.Controllers
                     .Select(g => g.Count())
                     .ToList(),
 
-                Sesiones = usuarioLibros
-                    .Where(u => u.UltimoAcceso.HasValue)
-                    .Select(u => u.UltimoAcceso.Value.ToShortDateString())
-                    .ToList(),
-
-                PromedioMinutos = usuarioLibros
-                    .Where(u => u.TiempoLectura.HasValue)
-                    .Select(u => (int)u.TiempoLectura.Value.TotalMinutes)
-                    .ToList(),
+              
             };
 
             return View(model);

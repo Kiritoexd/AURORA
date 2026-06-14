@@ -24,10 +24,6 @@
             <span class="est-kpi-value">@Model.LibrosPendientes</span>
             <span class="est-kpi-label">Pendientes</span>
         </div>
-        <div class="est-kpi">
-            <span class="est-kpi-value">@((Model.MinutosPorMes ?? new List<int>()).Sum())</span>
-            <span class="est-kpi-label">Min. totales</span>
-        </div>
     </div>
 
     <!-- Charts grid -->
@@ -54,28 +50,19 @@
             </div>
         </div>
 
-        <div class="est-card est-card--wide">
-            <p class="est-card-title">Tiempo de lectura mensual</p>
-            <div class="est-chart-wrap">
-                <canvas id="tiempoChart"></canvas>
-            </div>
-        </div>
-
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const terra     = '#b85c38';
+        const terra      = '#b85c38';
         const terraLight = '#d4795a';
-        const terraPale = 'rgba(184,92,56,0.10)';
-        const terraGlow = 'rgba(184,92,56,0.18)';
-        const ink       = '#1c1814';
-        const inkMuted  = '#7a6e63';
-        const inkGhost  = '#b0a498';
-        const gridCol   = 'rgba(28,24,20,0.06)';
-        const ivoryDeep = '#e6ddd0';
+        const terraPale  = 'rgba(184,92,56,0.10)';
+        const inkMuted   = '#7a6e63';
+        const inkGhost   = '#b0a498';
+        const gridCol    = 'rgba(28,24,20,0.06)';
+        const ivoryDeep  = '#e6ddd0';
 
         Chart.defaults.font.family = "'Figtree', system-ui, sans-serif";
         Chart.defaults.font.size   = 12;
@@ -153,32 +140,6 @@
         borderWidth: 1,
         borderRadius: 4,
         borderSkipped: false
-        }]
-        },
-        options: {
-        scales: { x: axisStyle, y: axisStyle },
-        plugins: { legend: { display: false } }
-        }
-        });
-
-        // ── Tiempo de lectura mensual (line)
-        var meses         = @Html.Raw(JsonSerializer.Serialize(Model.Meses ?? new List<string>()));
-        var minutosPorMes = @Html.Raw(JsonSerializer.Serialize(Model.MinutosPorMes ?? new List<int>()));
-        new Chart(document.getElementById('tiempoChart'), {
-        type: 'line',
-        data: {
-        labels: meses,
-        datasets: [{
-        label: 'Minutos',
-        data: minutosPorMes,
-        borderColor: terra,
-        backgroundColor: terraPale,
-        pointBackgroundColor: terra,
-        pointBorderColor: '#fff',
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        fill: true,
-        tension: 0.4
         }]
         },
         options: {
