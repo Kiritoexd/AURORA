@@ -663,7 +663,8 @@ namespace AURORA.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { ok = false, msg = ex.Message });
+                var inner = ex.InnerException?.Message ?? "sin inner exception";
+                return Json(new { ok = false, msg = $"{ex.Message} | Inner: {inner}" });
             }
         }
 
