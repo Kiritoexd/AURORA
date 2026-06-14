@@ -456,7 +456,6 @@ namespace AURORA.Controllers
         {
             return View();
         }
-
         [HttpGet]
         [Authorize(Roles = "Lector")]
         public IActionResult Racha()
@@ -478,16 +477,30 @@ namespace AURORA.Controllers
                 _context.SaveChanges();
             }
 
-            ViewBag.YaRegistroHoy = racha.UltimaLectura?.Date == DateTime.UtcNow.Date;
+            bool yaRegistroHoy = racha.UltimaLectura?.Date == DateTime.UtcNow.Date;
+            bool esNuevoRegistro = false;
+
+            if (!yaRegistroHoy)
+            {
+                racha.DiasConsecutivos = racha.UltimaLectura?.Date == DateTime.UtcNow.Date.AddDays(-1)
+                    ? racha.DiasConsecutivos + 1
+                    : 1;
+
+                racha.UltimaLectura = DateTime.UtcNow.Date;
+                _context.SaveChanges();
+                esNuevoRegistro = true;
+            }
+
+            ViewBag.EsNuevoRegistro = esNuevoRegistro;
 
             var logros = new List<LogroViewModel>
-            {
-                new() { Nombre = "Primera semana",    Dias = 7,   Desbloqueado = racha.DiasConsecutivos >= 7   },
-                new() { Nombre = "Lectura constante", Dias = 15,  Desbloqueado = racha.DiasConsecutivos >= 15  },
-                new() { Nombre = "Meta mensual",      Dias = 30,  Desbloqueado = racha.DiasConsecutivos >= 30  },
-                new() { Nombre = "Super lector",      Dias = 60,  Desbloqueado = racha.DiasConsecutivos >= 60  },
-                new() { Nombre = "Leyenda",           Dias = 100, Desbloqueado = racha.DiasConsecutivos >= 100 },
-            };
+    {
+        new() { Nombre = "Primera semana",    Dias = 7,   Desbloqueado = racha.DiasConsecutivos >= 7   },
+        new() { Nombre = "Lectura constante", Dias = 15,  Desbloqueado = racha.DiasConsecutivos >= 15  },
+        new() { Nombre = "Meta mensual",      Dias = 30,  Desbloqueado = racha.DiasConsecutivos >= 30  },
+        new() { Nombre = "Super lector",      Dias = 60,  Desbloqueado = racha.DiasConsecutivos >= 60  },
+        new() { Nombre = "Leyenda",           Dias = 100, Desbloqueado = racha.DiasConsecutivos >= 100 },
+    };
 
             var model = new RachaViewModel
             {

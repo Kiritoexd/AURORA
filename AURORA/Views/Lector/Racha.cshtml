@@ -1,19 +1,23 @@
 ﻿@model AURORA.Models.RachaViewModel
 @{
     ViewData["Title"] = "Mi Racha";
+    bool esNuevo = ViewBag.EsNuevoRegistro == true;
 }
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="~/css/Racha.css" asp-append-version="true" />
 
+<!-- Partículas de celebración -->
+<canvas id="celebCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:999;display:none;"></canvas>
+
 <div class="racha-wrapper">
 
     <!-- Hero -->
     <div class="racha-hero">
         <div class="racha-hero__left">
-            <div class="racha-flame-wrap">
-                <svg class="racha-flame" viewBox="0 0 64 80" fill="none">
+            <div class="racha-flame-wrap" id="flameWrap">
+                <svg class="racha-flame" id="flamesvg" viewBox="0 0 64 80" fill="none">
                     <path d="M32 4C32 4 48 20 48 36C48 44.837 40.837 52 32 52C23.163 52 16 44.837 16 36C16 28 22 20 22 20C22 20 20 32 28 36C28 36 24 24 32 4Z" fill="url(#flameGrad)" />
                     <path d="M32 40C32 40 38 34 38 28C38 24 35 21 32 20C32 20 36 26 32 32C32 32 30 28 27 28C27 28 26 36 32 40Z" fill="url(#innerGrad)" />
                     <defs>
@@ -27,17 +31,17 @@
                         </linearGradient>
                     </defs>
                 </svg>
-                <div class="racha-glow-ring"></div>
+                <div class="racha-glow-ring" id="glowRing"></div>
             </div>
 
             <div class="racha-hero__stat">
-                <span class="racha-days-num">@Model.DiasSeguidos</span>
+                <span class="racha-days-num" id="rachaNum">@Model.DiasSeguidos</span>
                 <span class="racha-days-label">días seguidos</span>
             </div>
         </div>
 
         <div class="racha-hero__right">
-            <p class="racha-message">
+            <p class="racha-message" id="rachaMsg">
                 @if (Model.DiasSeguidos == 0)
                 {
                     <span>Empieza hoy y enciende tu primera racha.</span>
@@ -56,31 +60,18 @@
                 }
             </p>
 
-            @if (ViewBag.YaRegistroHoy == true)
+            <div class="racha-registered" id="rachaRegistered" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Lectura registrada hoy
+            </div>
+
+            @if (!esNuevo)
             {
-                <div class="racha-registered">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    Lectura registrada hoy
-                </div>
-            }
-            else
-            {
-                <form asp-action="RegistrarLectura" method="post">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="racha-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                            <line x1="12" y1="18" x2="12" y2="12" />
-                            <line x1="9" y1="15" x2="15" y2="15" />
-                        </svg>
-                        Registrar lectura de hoy
-                    </button>
-                </form>
+                <!-- Ya registrado previamente, mostrar badge directo -->
+                <script>document.addEventListener('DOMContentLoaded',()=>{ document.getElementById('rachaRegistered').style.display=''; });</script>
             }
         </div>
     </div>
@@ -163,10 +154,200 @@
 </div>
 
 <script>
+    const ES_NUEVO = @(esNuevo ? "true" : "false");
+    const DIAS     = @Model.DiasSeguidos;
+    const META     = @Model.MetaDias;
+
     document.addEventListener("DOMContentLoaded", () => {
-        const fill = document.getElementById("rachaFill");
-        const pct  = Math.min((@Model.DiasSeguidos / (double)@Model.MetaDias) * 100, 100);
-        fill.style.width = "0%";
-        setTimeout(() => { fill.style.width = pct + "%"; }, 200);
+    // Barra de progreso siempre
+    const fill = document.getElementById("rachaFill");
+    const pct  = Math.min((DIAS / META) * 100, 100);
+    fill.style.width = "0%";
+    setTimeout(() => { fill.style.width = pct + "%"; }, 200);
+
+    if (!ES_NUEVO) return;
+
+    // ── Secuencia de celebración ──────────────────────────────────
+    const flameWrap = document.getElementById("flameWrap");
+    const glowRing  = document.getElementById("glowRing");
+    const numEl     = document.getElementById("rachaNum");
+    const badge     = document.getElementById("rachaRegistered");
+
+    // 1. Llama pulsa grande
+    setTimeout(() => {
+    flameWrap.classList.add("flame--celebrar");
+    glowRing.classList.add("glow--celebrar");
+    }, 300);
+
+    // 2. Número hace pop
+    setTimeout(() => {
+    numEl.classList.add("num--pop");
+    }, 600);
+
+    // 3. Partículas
+    setTimeout(() => {
+    lanzarParticulas();
+    }, 500);
+
+    // 4. Badge aparece con slide
+    setTimeout(() => {
+    badge.style.display = "";
+    badge.classList.add("badge--entrando");
+    }, 900);
+
+    // 5. Limpiar clases de animación
+    setTimeout(() => {
+    flameWrap.classList.remove("flame--celebrar");
+    glowRing.classList.remove("glow--celebrar");
+    numEl.classList.remove("num--pop");
+    }, 1800);
     });
+
+    // ── Canvas partículas estilo Duolingo ─────────────────────────────
+    function lanzarParticulas() {
+    const canvas = document.getElementById("celebCanvas");
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = "block";
+    const ctx = canvas.getContext("2d");
+
+    const colores = ["#b85c38","#d4795a","#6b8c6e","#F5C842","#efe9de","#b0a498"];
+    const particulas = Array.from({ length: 90 }, () => ({
+    x:  canvas.width  * (0.3 + Math.random() * 0.4),
+    y:  canvas.height * 0.35,
+    vx: (Math.random() - 0.5) * 9,
+    vy: -(Math.random() * 10 + 4),
+    r:  Math.random() * 6 + 3,
+    color: colores[Math.floor(Math.random() * colores.length)],
+    rot: Math.random() * 360,
+    rotV: (Math.random() - 0.5) * 8,
+    forma: Math.random() > 0.5 ? "rect" : "circle",
+    alpha: 1
+    }));
+
+    let frame = 0;
+    function animar() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particulas.forEach(p => {
+    p.x  += p.vx;
+    p.y  += p.vy;
+    p.vy += 0.35;          // gravedad
+    p.vx *= 0.98;
+    p.rot += p.rotV;
+    p.alpha -= 0.013;
+
+    if (p.alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = Math.max(p.alpha, 0);
+    ctx.translate(p.x, p.y);
+    ctx.rotate((p.rot * Math.PI) / 180);
+    ctx.fillStyle = p.color;
+
+    if (p.forma === "rect") {
+    ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+    } else {
+    ctx.beginPath();
+    ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+    ctx.fill();
+    }
+    ctx.restore();
+    });
+
+    frame++;
+    if (frame < 120) requestAnimationFrame(animar);
+    else canvas.style.display = "none";
+    }
+    animar();
+    }
 </script>
+
+<style>
+    /* ── Animaciones de celebración ─────────────────────────────────── */
+
+    @@keyframes flamePulse {
+    0% {
+    transform: scale(1);
+    }
+
+    30% {
+    transform: scale(1.45) rotate(-4deg);
+    }
+
+    55% {
+    transform: scale(1.3) rotate(3deg);
+    }
+
+    75% {
+    transform: scale(1.38) rotate(-2deg);
+    }
+
+    100% {
+    transform: scale(1);
+    }
+    }
+
+    @@keyframes glowBurst {
+    0% {
+    opacity: 0.4;
+    transform: scale(1);
+    }
+
+    40% {
+    opacity: 1;
+    transform: scale(2.2);
+    }
+
+    100% {
+    opacity: 0;
+    transform: scale(3);
+    }
+    }
+
+    @@keyframes numPop {
+    0% {
+    transform: scale(1);
+    }
+
+    40% {
+    transform: scale(1.35);
+    color: var(--terra);
+    }
+
+    70% {
+    transform: scale(0.95);
+    }
+
+    100% {
+    transform: scale(1);
+    }
+    }
+
+    @@keyframes badgeSlide {
+    from {
+    opacity: 0;
+    transform: translateY(10px);
+    }
+
+    to {
+    opacity: 1;
+    transform: translateY(0);
+    }
+    }
+
+    .flame--celebrar .racha-flame {
+    animation: flamePulse 0.9s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+
+    .glow--celebrar {
+    animation: glowBurst 1s ease-out forwards !important;
+    }
+
+    .num--pop {
+    display: inline-block;
+    animation: numPop 0.6s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+
+    .badge--entrando {
+    animation: badgeSlide 0.45s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+</style>
