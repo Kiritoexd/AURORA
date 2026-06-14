@@ -274,14 +274,15 @@ namespace AURORA.Controllers
         [Authorize(Roles = "Lector")]
         public async Task<IActionResult> EliminarPdf(int id)
         {
-            var libro = _context.Libros.FirstOrDefault(l => l.Id == id);
-            if (libro != null)
-            {
-                var usuarioLibros = _context.UsuarioLibros.Where(ul => ul.LibroId == id);
-                _context.UsuarioLibros.RemoveRange(usuarioLibros);
-                _context.Libros.Remove(libro);
-                await _context.SaveChangesAsync();
-            }
+            // Eliminar relaciones primero (sin cargar PdfBytes a memoria)
+            await _context.UsuarioLibros
+                .Where(ul => ul.LibroId == id)
+                .ExecuteDeleteAsync();
+
+            // Eliminar el libro directo en BD sin traerlo a memoria
+            await _context.Libros
+                .Where(l => l.Id == id)
+                .ExecuteDeleteAsync();
 
             return RedirectToAction("Biblioteca");
         }
