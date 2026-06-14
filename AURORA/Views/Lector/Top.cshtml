@@ -10,7 +10,7 @@
 
     <div class="top-header">
         <h1 class="top-title">Mi TOP de Libros</h1>
-        <p class="top-subtitle">Tu ranking personal de lecturas</p>
+        <p class="top-subtitle">Toca un libro y luego toca donde quieres moverlo</p>
     </div>
 
     @if (!Model.Any())
@@ -34,7 +34,7 @@
             @if (Model.Count >= 2)
             {
                 var p2 = Model[1];
-                <div class="podium-slot podium-slot--2" data-id="@p2.LibroId">
+                <div class="podium-slot podium-slot--2" data-id="@p2.LibroId" data-pos="2" onclick="seleccionar(this)">
                     <div class="podium-medal podium-medal--2">2</div>
                     <div class="podium-cover">
                         @if (!string.IsNullOrEmpty(p2.PortadaUrl))
@@ -62,7 +62,7 @@
             @if (Model.Count >= 1)
             {
                 var p1 = Model[0];
-                <div class="podium-slot podium-slot--1" data-id="@p1.LibroId">
+                <div class="podium-slot podium-slot--1" data-id="@p1.LibroId" data-pos="1" onclick="seleccionar(this)">
                     <div class="podium-crown">
                         <svg viewBox="0 0 24 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1 13 L4 3 L8.5 8 L12 1 L15.5 8 L20 3 L23 13 Z" fill="#F5C842" stroke="#e6a800" stroke-width="0.8" stroke-linejoin="round" />
@@ -95,7 +95,7 @@
             @if (Model.Count >= 3)
             {
                 var p3 = Model[2];
-                <div class="podium-slot podium-slot--3" data-id="@p3.LibroId">
+                <div class="podium-slot podium-slot--3" data-id="@p3.LibroId" data-pos="3" onclick="seleccionar(this)">
                     <div class="podium-medal podium-medal--3">3</div>
                     <div class="podium-cover">
                         @if (!string.IsNullOrEmpty(p3.PortadaUrl))
@@ -124,13 +124,13 @@
         @if (Model.Count > 3)
         {
             <div class="top-list-header">
-                <span>Arrastra para reordenar</span>
+                <span>Toca para intercambiar posición</span>
             </div>
             <div id="topLibros" class="top-list">
                 @for (int i = 3; i < Model.Count; i++)
                 {
                     var libro = Model[i];
-                    <div class="top-list-card" draggable="true" data-id="@libro.LibroId">
+                    <div class="top-list-card" data-id="@libro.LibroId" data-pos="@(i + 1)" onclick="seleccionar(this)">
                         <span class="top-list-card__pos">#@(i + 1)</span>
                         <div class="top-list-card__cover">
                             @if (!string.IsNullOrEmpty(libro.PortadaUrl))
@@ -152,16 +152,6 @@
                                 <div class="top-list-card__progreso-fill" style="width:@libro.Progreso%"></div>
                             </div>
                             <span class="top-list-card__progreso-pct">@libro.Progreso%</span>
-                        </div>
-                        <div class="top-list-card__drag-handle">
-                            <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
-                                <circle cx="9" cy="5" r="1.2" fill="var(--ink-ghost)" />
-                                <circle cx="15" cy="5" r="1.2" fill="var(--ink-ghost)" />
-                                <circle cx="9" cy="12" r="1.2" fill="var(--ink-ghost)" />
-                                <circle cx="15" cy="12" r="1.2" fill="var(--ink-ghost)" />
-                                <circle cx="9" cy="19" r="1.2" fill="var(--ink-ghost)" />
-                                <circle cx="15" cy="19" r="1.2" fill="var(--ink-ghost)" />
-                            </svg>
                         </div>
                     </div>
                 }
@@ -185,55 +175,91 @@
 
 @section Scripts {
     <script>
-        const list = document.getElementById('topLibros');
-        let dragging = null;
+        let seleccionado = null;
 
-        if (list) {
-            list.addEventListener('dragstart', e => {
-                dragging = e.target.closest('.top-list-card');
-                setTimeout(() => dragging?.classList.add('top-list-card--dragging'), 0);
-            });
+        function seleccionar(el) {
+            // Si no hay seleccionado, marcar este
+            if (!seleccionado) {
+                seleccionado = el;
+                el.classList.add('item--seleccionado');
+                return;
+            }
 
-            list.addEventListener('dragend', () => {
-                dragging?.classList.remove('top-list-card--dragging');
-                dragging = null;
-                actualizarPosiciones();
-            });
+            // Si toca el mismo, deseleccionar
+            if (seleccionado === el) {
+                el.classList.remove('item--seleccionado');
+                seleccionado = null;
+                return;
+            }
 
-            list.addEventListener('dragover', e => {
-                e.preventDefault();
-                const over = e.target.closest('.top-list-card');
-                if (!over || over === dragging) return;
-                const rect  = over.getBoundingClientRect();
-                const after = e.clientY > rect.top + rect.height / 2;
-                list.insertBefore(dragging, after ? over.nextSibling : over);
+            // Intercambiar contenido visual entre los dos elementos
+            swapContenido(seleccionado, el);
+
+            seleccionado.classList.remove('item--seleccionado');
+            seleccionado = null;
+        }
+
+        function swapContenido(a, b) {
+            // Intercambiar data-id
+            const idA = a.dataset.id;
+            a.dataset.id = b.dataset.id;
+            b.dataset.id = idA;
+
+            // Intercambiar contenido visual interno
+            // Para podium-slot: intercambiar cover + info
+            // Para list-card: intercambiar cover + body + progreso
+            const innerA = getSwappableHTML(a);
+            const innerB = getSwappableHTML(b);
+
+            setSwappableHTML(a, innerB);
+            setSwappableHTML(b, innerA);
+
+            // Animación flash
+            [a, b].forEach(el => {
+                el.classList.add('item--swap');
+                setTimeout(() => el.classList.remove('item--swap'), 400);
             });
         }
 
-        function actualizarPosiciones() {
-            if (!list) return;
-            list.querySelectorAll('.top-list-card__pos').forEach((el, i) => {
-                el.textContent = `#${i + 4}`;
-            });
+        function getSwappableHTML(el) {
+            if (el.classList.contains('podium-slot')) {
+                return {
+                    cover: el.querySelector('.podium-cover').innerHTML,
+                    info:  el.querySelector('.podium-info').innerHTML
+                };
+            } else {
+                return {
+                    cover:    el.querySelector('.top-list-card__cover').innerHTML,
+                    body:     el.querySelector('.top-list-card__body').innerHTML,
+                    progreso: el.querySelector('.top-list-card__progreso-wrap').innerHTML
+                };
+            }
+        }
+
+        function setSwappableHTML(el, data) {
+            if (el.classList.contains('podium-slot')) {
+                el.querySelector('.podium-cover').innerHTML = data.cover;
+                el.querySelector('.podium-info').innerHTML  = data.info;
+            } else {
+                el.querySelector('.top-list-card__cover').innerHTML         = data.cover;
+                el.querySelector('.top-list-card__body').innerHTML          = data.body;
+                el.querySelector('.top-list-card__progreso-wrap').innerHTML = data.progreso;
+            }
         }
 
         function guardarOrden() {
-            // Podium fijos
             const orden = [];
+
             document.querySelectorAll('.podium-slot').forEach(el => {
                 const pos = el.classList.contains('podium-slot--1') ? 1
                           : el.classList.contains('podium-slot--2') ? 2 : 3;
                 orden.push({ libroId: parseInt(el.dataset.id), posicion: pos });
             });
 
-            // Lista draggable
-            if (list) {
-                list.querySelectorAll('.top-list-card').forEach((c, i) => {
-                    orden.push({ libroId: parseInt(c.dataset.id), posicion: i + 4 });
-                });
-            }
+            document.querySelectorAll('.top-list-card').forEach((c, i) => {
+                orden.push({ libroId: parseInt(c.dataset.id), posicion: i + 4 });
+            });
 
-            // Ordenar por posicion
             orden.sort((a, b) => a.posicion - b.posicion);
 
             fetch("/Lector/GuardarOrden", {
