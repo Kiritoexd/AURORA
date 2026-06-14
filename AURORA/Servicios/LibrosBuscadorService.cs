@@ -6,13 +6,16 @@ namespace AURORA.Servicios
     public class LibrosBuscadorService
     {
         private readonly HttpClient _http;
+        private readonly ILogger<LibrosBuscadorService> _logger;
 
-        public LibrosBuscadorService(HttpClient http)
+        public LibrosBuscadorService(HttpClient http, ILogger<LibrosBuscadorService> logger)
         {
             _http = http;
-            _http.Timeout = TimeSpan.FromSeconds(10); // Railway puede tener latencia alta
+            _http.Timeout = TimeSpan.FromSeconds(30); // Railway necesita más margen
+            _logger = logger;
         }
 
+        // Quita tildes para búsquedas más amplias
         private static string QuitarTildes(string texto)
         {
             var normalized = texto.Normalize(NormalizationForm.FormD);
@@ -26,19 +29,11 @@ namespace AURORA.Servicios
             return sb.ToString().Normalize(NormalizationForm.FormC);
         }
 
-        /// <summary>
-        /// Gutendex a veces devuelve URLs del tipo:
-        ///   https://www.gutenberg.org/ebooks/1342.epub3.images   ← redirige a HTML, da 404 al descargar
-        ///   https://www.gutenberg.org/ebooks/1342.epub.images    ← igual
-        /// Las reemplazamos por la URL directa del cache:
-        ///   https://www.gutenberg.org/cache/epub/1342/pg1342.epub
-        /// Para PDF, Gutendex ya suele dar la URL del cache directamente, pero también lo normalizamos.
-        /// </summary>
+        // Normaliza URLs raras de Gutenberg a la URL directa del cache
         private static string NormalizarUrlGutenberg(string url, string formato, out string formatoFinal)
         {
             formatoFinal = formato;
 
-            // Detectar patrón /ebooks/{id}.epub* o /ebooks/{id}.pdf
             var match = System.Text.RegularExpressions.Regex.Match(
                 url, @"gutenberg\.org/ebooks/(\d+)\.(epub|pdf)");
 
@@ -59,7 +54,6 @@ namespace AURORA.Servicios
                 }
             }
 
-            // Si ya es una URL del cache, dejarla como está
             return url;
         }
 
@@ -67,34 +61,46 @@ namespace AURORA.Servicios
         {
             var querySinTilde = QuitarTildes(query);
 
+            // CORRECCIÓN: ya no filtramos solo español porque Gutendex tiene muy
+            // pocos libros en español y el filtro ?languages=es bota casi todo.
+            // Hacemos 2 búsquedas: con y sin tildes, sin restricción de idioma.
             var tareas = await Task.WhenAll(
-                BuscarGutendex(query, soloEspanol: true),
-                BuscarGutendex(querySinTilde, soloEspanol: true),
-                BuscarGutendex(query, soloEspanol: false),
-                BuscarGutendex(querySinTilde, soloEspanol: false)
+                BuscarGutendex(query),
+                BuscarGutendex(querySinTilde)
             );
 
             var resultados = tareas
                 .SelectMany(x => x)
                 .GroupBy(l => l.Titulo.ToLower().Trim())
                 .Select(g => g.First())
+                // Priorizar español primero, luego PDF
                 .OrderByDescending(l => l.Idioma == "es")
                 .ThenByDescending(l => l.Formato == "pdf")
                 .Take(24)
                 .ToList();
 
+            _logger.LogInformation("Búsqueda '{Query}' → {Count} resultados", query, resultados.Count);
+
             return resultados;
         }
 
-        private async Task<List<LibroExterno>> BuscarGutendex(string query, bool soloEspanol)
+        private async Task<List<LibroExterno>> BuscarGutendex(string query)
         {
             try
             {
-                var lang = soloEspanol ? "&languages=es" : "";
-                var url = $"https://gutendex.com/books/?search={Uri.EscapeDataString(query)}{lang}";
+                // Sin filtro de idioma para obtener más resultados
+                var url = $"https://gutendex.com/books/?search={Uri.EscapeDataString(query)}";
+
+                _logger.LogInformation("Consultando Gutendex: {Url}", url);
 
                 var response = await _http.GetAsync(url);
-                if (!response.IsSuccessStatusCode) return new();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Gutendex respondió {Status} para query '{Query}'",
+                        response.StatusCode, query);
+                    return new();
+                }
 
                 var json = await response.Content.ReadAsStringAsync();
                 var root = JsonDocument.Parse(json).RootElement;
@@ -105,26 +111,39 @@ namespace AURORA.Servicios
                 {
                     var libroId = item.GetProperty("id").GetInt32();
                     string? urlDescarga = null;
-                    string formato = "pdf";
+                    string formato = "epub";
 
                     if (item.TryGetProperty("formats", out var formats))
                     {
+                        // Prioridad: epub primero (más compatible), luego pdf
+                        string? urlEpub = null;
+                        string? urlPdf = null;
+
                         foreach (var fmt in formats.EnumerateObject())
                         {
                             var val = fmt.Value.GetString() ?? "";
-                            if (val.EndsWith(".png") || val.EndsWith(".jpg") ||
-                                val.EndsWith(".jpeg") || val.Contains(".htm")) continue;
 
-                            if (fmt.Name == "application/pdf" && urlDescarga == null)
-                            { urlDescarga = val; formato = "pdf"; }
-                            else if (fmt.Name == "application/epub+zip" && urlDescarga == null)
-                            { urlDescarga = val; formato = "epub"; }
+                            // Saltar imágenes y HTML
+                            if (val.EndsWith(".png") || val.EndsWith(".jpg") ||
+                                val.EndsWith(".jpeg") || val.Contains(".htm") ||
+                                val.Contains("cover")) continue;
+
+                            if (fmt.Name == "application/epub+zip" && urlEpub == null)
+                                urlEpub = val;
+                            else if (fmt.Name == "application/pdf" && urlPdf == null)
+                                urlPdf = val;
                         }
+
+                        // Preferimos epub pero aceptamos pdf si no hay epub
+                        if (urlEpub != null)
+                        { urlDescarga = urlEpub; formato = "epub"; }
+                        else if (urlPdf != null)
+                        { urlDescarga = urlPdf; formato = "pdf"; }
                     }
 
                     if (string.IsNullOrEmpty(urlDescarga)) continue;
 
-                    // 🔑 FIX: Normalizar la URL antes de guardarla
+                    // Normalizar URL de Gutenberg
                     urlDescarga = NormalizarUrlGutenberg(urlDescarga, formato, out formato);
 
                     var titulo = item.GetProperty("title").GetString() ?? "Sin título";
@@ -154,9 +173,19 @@ namespace AURORA.Servicios
                     });
                 }
 
+                _logger.LogInformation("Gutendex devolvió {Count} libros para '{Query}'", libros.Count, query);
                 return libros;
             }
-            catch { return new(); }
+            catch (TaskCanceledException)
+            {
+                _logger.LogWarning("Timeout al consultar Gutendex para '{Query}'", query);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al consultar Gutendex para '{Query}'", query);
+                return new();
+            }
         }
     }
 
