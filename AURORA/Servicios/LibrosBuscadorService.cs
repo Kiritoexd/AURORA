@@ -11,11 +11,11 @@ namespace AURORA.Servicios
         public LibrosBuscadorService(HttpClient http, ILogger<LibrosBuscadorService> logger)
         {
             _http = http;
-            _http.Timeout = TimeSpan.FromSeconds(30); // Railway necesita más margen
+            _http.Timeout = TimeSpan.FromSeconds(30);
+            _http.DefaultRequestHeaders.Add("User-Agent", "AURORA-App/1.0 (contacto@aurora.app)");
             _logger = logger;
         }
 
-        // Quita tildes para búsquedas más amplias
         private static string QuitarTildes(string texto)
         {
             var normalized = texto.Normalize(NormalizationForm.FormD);
@@ -29,161 +29,108 @@ namespace AURORA.Servicios
             return sb.ToString().Normalize(NormalizationForm.FormC);
         }
 
-        // Normaliza URLs raras de Gutenberg a la URL directa del cache
-        private static string NormalizarUrlGutenberg(string url, string formato, out string formatoFinal)
-        {
-            formatoFinal = formato;
-
-            var match = System.Text.RegularExpressions.Regex.Match(
-                url, @"gutenberg\.org/ebooks/(\d+)\.(epub|pdf)");
-
-            if (match.Success)
-            {
-                var libroId = match.Groups[1].Value;
-                var ext = match.Groups[2].Value;
-
-                if (ext == "epub")
-                {
-                    formatoFinal = "epub";
-                    return $"https://www.gutenberg.org/cache/epub/{libroId}/pg{libroId}.epub";
-                }
-                if (ext == "pdf")
-                {
-                    formatoFinal = "pdf";
-                    return $"https://www.gutenberg.org/cache/epub/{libroId}/pg{libroId}-pdf.pdf";
-                }
-            }
-
-            return url;
-        }
-
         public async Task<List<LibroExterno>> BuscarEnTodasAsync(string query)
         {
             var querySinTilde = QuitarTildes(query);
 
-            // CORRECCIÓN: ya no filtramos solo español porque Gutendex tiene muy
-            // pocos libros en español y el filtro ?languages=es bota casi todo.
-            // Hacemos 2 búsquedas: con y sin tildes, sin restricción de idioma.
             var tareas = await Task.WhenAll(
-                BuscarGutendex(query),
-                BuscarGutendex(querySinTilde)
+                BuscarOpenLibrary(query),
+                BuscarOpenLibrary(querySinTilde)
             );
 
             var resultados = tareas
                 .SelectMany(x => x)
                 .GroupBy(l => l.Titulo.ToLower().Trim())
                 .Select(g => g.First())
-                // Priorizar español primero, luego PDF
-                .OrderByDescending(l => l.Idioma == "es")
-                .ThenByDescending(l => l.Formato == "pdf")
                 .Take(24)
                 .ToList();
 
             _logger.LogInformation("Búsqueda '{Query}' → {Count} resultados", query, resultados.Count);
-
             return resultados;
         }
 
-        private async Task<List<LibroExterno>> BuscarGutendex(string query)
+        private async Task<List<LibroExterno>> BuscarOpenLibrary(string query)
         {
             try
             {
-                // Sin filtro de idioma para obtener más resultados
-                var url = $"https://gutendex.com/books/?search={Uri.EscapeDataString(query)}";
+                var url = $"https://openlibrary.org/search.json?q={Uri.EscapeDataString(query)}&has_fulltext=true&limit=20&fields=key,title,author_name,subject,language,ia,cover_i";
 
-                _logger.LogInformation("Consultando Gutendex: {Url}", url);
+                _logger.LogInformation("Consultando Open Library: {Url}", url);
 
                 var response = await _http.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Gutendex respondió {Status} para query '{Query}'",
-                        response.StatusCode, query);
+                    _logger.LogWarning("Open Library respondió {Status} para '{Query}'", response.StatusCode, query);
                     return new();
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
                 var root = JsonDocument.Parse(json).RootElement;
 
+                if (!root.TryGetProperty("docs", out var docs))
+                    return new();
+
                 var libros = new List<LibroExterno>();
 
-                foreach (var item in root.GetProperty("results").EnumerateArray())
+                foreach (var item in docs.EnumerateArray())
                 {
-                    var libroId = item.GetProperty("id").GetInt32();
-                    string? urlDescarga = null;
-                    string formato = "epub";
+                    // Necesitamos el ID de Internet Archive para poder descargar
+                    if (!item.TryGetProperty("ia", out var iaArray) || iaArray.GetArrayLength() == 0)
+                        continue;
 
-                    if (item.TryGetProperty("formats", out var formats))
-                    {
-                        // Prioridad: epub primero (más compatible), luego pdf
-                        string? urlEpub = null;
-                        string? urlPdf = null;
+                    var iaId = iaArray[0].GetString();
+                    if (string.IsNullOrEmpty(iaId)) continue;
 
-                        foreach (var fmt in formats.EnumerateObject())
-                        {
-                            var val = fmt.Value.GetString() ?? "";
+                    var titulo = item.TryGetProperty("title", out var t) ? t.GetString() ?? "Sin título" : "Sin título";
 
-                            // Saltar imágenes y HTML
-                            if (val.EndsWith(".png") || val.EndsWith(".jpg") ||
-                                val.EndsWith(".jpeg") || val.Contains(".htm") ||
-                                val.Contains("cover")) continue;
-
-                            if (fmt.Name == "application/epub+zip" && urlEpub == null)
-                                urlEpub = val;
-                            else if (fmt.Name == "application/pdf" && urlPdf == null)
-                                urlPdf = val;
-                        }
-
-                        // Preferimos epub pero aceptamos pdf si no hay epub
-                        if (urlEpub != null)
-                        { urlDescarga = urlEpub; formato = "epub"; }
-                        else if (urlPdf != null)
-                        { urlDescarga = urlPdf; formato = "pdf"; }
-                    }
-
-                    if (string.IsNullOrEmpty(urlDescarga)) continue;
-
-                    // Normalizar URL de Gutenberg
-                    urlDescarga = NormalizarUrlGutenberg(urlDescarga, formato, out formato);
-
-                    var titulo = item.GetProperty("title").GetString() ?? "Sin título";
-                    var autores = item.GetProperty("authors").EnumerateArray()
-                        .Select(a => a.GetProperty("name").GetString() ?? "")
-                        .Where(a => !string.IsNullOrEmpty(a)).Take(2).ToList();
+                    var autor = "Desconocido";
+                    if (item.TryGetProperty("author_name", out var autores) && autores.GetArrayLength() > 0)
+                        autor = autores[0].GetString() ?? "Desconocido";
 
                     var genero = "General";
-                    if (item.TryGetProperty("subjects", out var subjects) && subjects.GetArrayLength() > 0)
-                        genero = (subjects[0].GetString() ?? "General").Split(" -- ")[0].Split(",")[0].Trim();
-                    if (genero.Length > 50) genero = genero[..50];
+                    if (item.TryGetProperty("subject", out var subjects) && subjects.GetArrayLength() > 0)
+                    {
+                        genero = subjects[0].GetString() ?? "General";
+                        if (genero.Length > 50) genero = genero[..50];
+                    }
 
                     var idioma = "en";
-                    if (item.TryGetProperty("languages", out var langs) && langs.GetArrayLength() > 0)
+                    if (item.TryGetProperty("language", out var langs) && langs.GetArrayLength() > 0)
                         idioma = langs[0].GetString() ?? "en";
+
+                    // Descarga directa desde Internet Archive
+                    var urlDescarga = $"https://archive.org/download/{iaId}/{iaId}.pdf";
+
+                    string? portada = null;
+                    if (item.TryGetProperty("cover_i", out var coverId))
+                        portada = $"https://covers.openlibrary.org/b/id/{coverId.GetInt32()}-M.jpg";
 
                     libros.Add(new LibroExterno
                     {
                         Titulo = titulo,
-                        Autor = autores.Any() ? string.Join(", ", autores) : "Desconocido",
+                        Autor = autor,
                         UrlDescarga = urlDescarga,
-                        Formato = formato,
-                        Fuente = "Gutenberg",
+                        Formato = "pdf",
+                        Fuente = "Open Library",
                         Genero = genero,
                         Idioma = idioma,
-                        Portada = $"https://www.gutenberg.org/cache/epub/{libroId}/pg{libroId}.cover.medium.jpg"
+                        Portada = portada,
+                        IaId = iaId
                     });
                 }
 
-                _logger.LogInformation("Gutendex devolvió {Count} libros para '{Query}'", libros.Count, query);
+                _logger.LogInformation("Open Library devolvió {Count} libros para '{Query}'", libros.Count, query);
                 return libros;
             }
             catch (TaskCanceledException)
             {
-                _logger.LogWarning("Timeout al consultar Gutendex para '{Query}'", query);
+                _logger.LogWarning("Timeout al consultar Open Library para '{Query}'", query);
                 return new();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al consultar Gutendex para '{Query}'", query);
+                _logger.LogError(ex, "Error al consultar Open Library para '{Query}'", query);
                 return new();
             }
         }
@@ -199,5 +146,6 @@ namespace AURORA.Servicios
         public string Genero { get; set; } = "";
         public string? Portada { get; set; }
         public string Idioma { get; set; } = "en";
+        public string? IaId { get; set; }
     }
 }
