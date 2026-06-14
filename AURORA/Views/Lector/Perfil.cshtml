@@ -97,7 +97,8 @@
                 <div class="racha-nums">
                     <span class="racha-big" id="rachaNum">0</span>
                     <span class="racha-unit">días seguidos</span>
-                    <span class="racha-emoji" id="rachaEmoji"></span>
+                    <!-- Icono SVG de racha — se intercambia por JS según días -->
+                    <span class="racha-icono" id="rachaIcono"></span>
                 </div>
                 <div class="racha-bar">
                     <div class="racha-progreso" id="rachaFill"
@@ -178,8 +179,36 @@
 
 @section Scripts {
     <script>
-        const diasSeguidos = @Model.DiasSeguidos;
+        const diasSeguidos   = @Model.DiasSeguidos;
         const rachaPctTarget = parseFloat('@Model.RachaPct.ToString("F0")');
+
+        // SVGs de racha según nivel — stroke style igual que los iconos de la app
+        const RACHA_ICONOS = {
+            none: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                   </svg>`,
+            low:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                   </svg>`,
+            mid:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                      <circle cx="12" cy="12" r="2"/>
+                   </svg>`,
+            high: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+                      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                   </svg>`
+        };
+
+        function mostrarIconoRacha(dias) {
+            const el = document.getElementById('rachaIcono');
+            if (!el) return;
+            let nivel = 'none';
+            if (dias >= 30) nivel = 'high';
+            else if (dias >= 14) nivel = 'mid';
+            else if (dias > 0) nivel = 'low';
+            el.innerHTML = RACHA_ICONOS[nivel];
+        }
 
         function animarContador(el, objetivo, duracion) {
             const inicio = performance.now();
@@ -187,22 +216,21 @@
                 const t = Math.min((ahora - inicio) / duracion, 1);
                 el.textContent = Math.round((1 - Math.pow(1 - t, 3)) * objetivo);
                 if (t < 1) requestAnimationFrame(tick);
-                else { el.textContent = objetivo; mostrarEmoji(objetivo); }
+                else { el.textContent = objetivo; mostrarIconoRacha(objetivo); }
             }
             requestAnimationFrame(tick);
         }
 
-        function mostrarEmoji(dias) {
-            const e = document.getElementById('rachaEmoji');
-            e.textContent = dias >= 30 ? '🔥' : dias >= 14 ? '⚡' : dias >= 7 ? '✨' : dias > 0 ? '📖' : '';
-        }
-
         window.addEventListener('DOMContentLoaded', () => {
-            const fill = document.getElementById('rachaFill');
+            const fill     = document.getElementById('rachaFill');
             const pctLabel = document.getElementById('rachaPct');
             const rachaNum = document.getElementById('rachaNum');
+
+            // Mostrar icono inmediatamente
+            mostrarIconoRacha(diasSeguidos);
+
             setTimeout(() => {
-                if (fill) fill.style.width = fill.dataset.target;
+                if (fill)     fill.style.width = fill.dataset.target;
                 if (rachaNum) animarContador(rachaNum, diasSeguidos, 900);
                 if (pctLabel) {
                     const start = performance.now();
@@ -227,12 +255,12 @@
 
         document.getElementById('perfilForm').addEventListener('submit', function () {
             const btn = document.getElementById('btnGuardar');
-            btn.querySelector('.btn-text').style.display = 'none';
+            btn.querySelector('.btn-text').style.display  = 'none';
             btn.querySelector('.btn-spinner').style.display = 'inline-flex';
             btn.disabled = true;
         });
 
-        const fotoInput = document.getElementById('fotoInput');
+        const fotoInput  = document.getElementById('fotoInput');
         const fotoNombre = document.getElementById('fotoNombre');
 
         fotoInput.addEventListener('change', function () {
@@ -248,8 +276,8 @@
                 fotoNombre.style.color = '';
                 const reader = new FileReader();
                 reader.onload = e => {
-                    document.getElementById('fotoPreview').src = e.target.result;
-                    document.getElementById('modalPreviewImg').src = e.target.result;
+                    document.getElementById('fotoPreview').src      = e.target.result;
+                    document.getElementById('modalPreviewImg').src  = e.target.result;
                     document.getElementById('modalFoto').style.display = 'flex';
                 };
                 reader.readAsDataURL(file);
