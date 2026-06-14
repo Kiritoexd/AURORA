@@ -4,7 +4,6 @@
 }
 
 <style>
-    /* ─── Tokens de paleta AURORA ─────────────────────────────── */
     :root {
         --ivory: #f7f3ec;
         --ivory-warm: #efe9de;
@@ -30,14 +29,12 @@
         --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    /* ─── Layout principal ────────────────────────────────────── */
     .buscador-wrap {
         max-width: 980px;
         margin: 0 auto;
         padding: 2.5rem 1.25rem 4rem;
     }
 
-    /* ─── Encabezado ──────────────────────────────────────────── */
     .buscador-header {
         margin-bottom: 2rem;
     }
@@ -65,7 +62,6 @@
         margin: 0;
     }
 
-    /* ─── Barra de búsqueda ───────────────────────────────────── */
     .buscador-form {
         display: flex;
         gap: .6rem;
@@ -120,7 +116,6 @@
             transform: scale(.97);
         }
 
-    /* ─── Contador de resultados ──────────────────────────────── */
     .resultado-count {
         font-size: .82rem;
         color: var(--ink-muted);
@@ -131,14 +126,12 @@
             color: var(--ink-soft);
         }
 
-    /* ─── Grid de tarjetas ────────────────────────────────────── */
     .buscador-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
         gap: 1.1rem;
     }
 
-    /* ─── Tarjeta ─────────────────────────────────────────────── */
     .libro-card {
         background: var(--surface);
         border: 1px solid var(--border);
@@ -156,7 +149,6 @@
             border-color: var(--border-warm);
         }
 
-    /* Portada */
     .libro-portada {
         width: 100%;
         height: 165px;
@@ -172,10 +164,14 @@
         align-items: center;
         justify-content: center;
         background: var(--ivory-warm);
-        font-size: 2.5rem;
     }
 
-    /* Cuerpo */
+        .libro-portada-placeholder svg {
+            width: 40px;
+            height: 40px;
+            stroke: var(--ink-ghost);
+        }
+
     .libro-body {
         padding: .9rem 1rem 1rem;
         flex: 1;
@@ -194,7 +190,7 @@
     .libro-badge {
         display: inline-flex;
         align-items: center;
-        gap: .2rem;
+        gap: .25rem;
         padding: .12rem .5rem;
         border-radius: 20px;
         font-size: .68rem;
@@ -202,6 +198,13 @@
         letter-spacing: .02em;
         line-height: 1.6;
     }
+
+        .libro-badge svg {
+            width: 10px;
+            height: 10px;
+            stroke: currentColor;
+            flex-shrink: 0;
+        }
 
     .badge-es {
         background: rgba(234,179,8,0.12);
@@ -215,16 +218,16 @@
         border: 1px solid var(--border);
     }
 
-    .badge-gutendex {
-        background: var(--terra-pale);
-        color: var(--terra);
-        border: 1px solid var(--border-warm);
-    }
-
     .badge-openlibrary {
         background: var(--sage-pale);
         color: var(--sage);
         border: 1px solid rgba(107,140,110,0.25);
+    }
+
+    .badge-gutendex {
+        background: var(--terra-pale);
+        color: var(--terra);
+        border: 1px solid var(--border-warm);
     }
 
     .badge-advertencia {
@@ -258,10 +261,16 @@
         margin: 0;
         display: flex;
         align-items: center;
-        gap: .3rem;
+        gap: .35rem;
     }
 
-    /* ─── Botón importar ──────────────────────────────────────── */
+        .libro-meta svg {
+            width: 12px;
+            height: 12px;
+            stroke: var(--ink-ghost);
+            flex-shrink: 0;
+        }
+
     .btn-importar {
         margin-top: auto;
         width: 100%;
@@ -275,12 +284,19 @@
         cursor: pointer;
         letter-spacing: .02em;
         transition: background .18s var(--ease), color .18s, border-color .18s;
-        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: .4rem;
     }
+
+        .btn-importar svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            flex-shrink: 0;
+            transition: stroke .18s;
+        }
 
         .btn-importar:hover:not(:disabled) {
             background: var(--terra);
@@ -293,7 +309,6 @@
             cursor: not-allowed;
         }
 
-    /* Spinner */
     .spinner {
         display: none;
         width: 14px;
@@ -311,7 +326,6 @@
         }
     }
 
-    /* ─── Alertas ─────────────────────────────────────────────── */
     .alerta {
         padding: .85rem 1.1rem;
         border-radius: var(--radius-sm);
@@ -321,6 +335,13 @@
         align-items: center;
         gap: .6rem;
     }
+
+        .alerta svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            flex-shrink: 0;
+        }
 
     .alerta-exito {
         background: var(--sage-pale);
@@ -334,7 +355,6 @@
         color: var(--terra);
     }
 
-    /* ─── Estado vacío ────────────────────────────────────────── */
     .sin-resultados {
         text-align: center;
         padding: 4rem 1.5rem;
@@ -342,11 +362,18 @@
     }
 
         .sin-resultados .sin-icono {
-            font-size: 2.8rem;
-            margin-bottom: 1rem;
-            display: block;
-            opacity: .5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            opacity: .4;
         }
+
+            .sin-resultados .sin-icono svg {
+                width: 48px;
+                height: 48px;
+                stroke: var(--ink-ghost);
+            }
 
         .sin-resultados p {
             font-size: .9rem;
@@ -364,7 +391,6 @@
             margin-top: .5rem;
         }
 
-    /* ─── Overlay de carga ────────────────────────────────────── */
     .cargando-overlay {
         display: none;
         position: fixed;
@@ -421,7 +447,6 @@
         transition: opacity .3s;
     }
 
-    /* ─── Responsive ──────────────────────────────────────────── */
     @@media (max-width: 480px) {
         .buscador-grid {
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -433,7 +458,38 @@
     }
 </style>
 
-<!-- Overlay de carga al importar -->
+<!-- SVG icons reutilizables -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="ico-book" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </symbol>
+    <symbol id="ico-search" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </symbol>
+    <symbol id="ico-user" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+    </symbol>
+    <symbol id="ico-tag" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" />
+    </symbol>
+    <symbol id="ico-globe" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </symbol>
+    <symbol id="ico-alert" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+    </symbol>
+    <symbol id="ico-check" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+    </symbol>
+    <symbol id="ico-plus" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+    </symbol>
+    <symbol id="ico-file" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+    </symbol>
+</svg>
+
+<!-- Overlay de carga -->
 <div class="cargando-overlay" id="overlayImportando">
     <div class="overlay-card">
         <div class="overlay-spinner"></div>
@@ -447,26 +503,24 @@
     <div class="buscador-header">
         <p class="buscador-eyebrow">Biblioteca abierta</p>
         <h2 class="buscador-titulo">Buscar libros</h2>
-        <p class="buscador-subtitulo">Miles de títulos gratuitos de Project Gutenberg</p>
+        <p class="buscador-subtitulo">Miles de títulos gratuitos de Open Library</p>
     </div>
 
-    <!-- Alertas -->
     @if (TempData["Exito"] != null)
     {
         <div class="alerta alerta-exito">
-            <span>✓</span>
+            <svg><use href="#ico-check" /></svg>
             <span>@TempData["Exito"]</span>
         </div>
     }
     @if (TempData["Error"] != null)
     {
         <div class="alerta alerta-error">
-            <span>⚠</span>
+            <svg><use href="#ico-alert" /></svg>
             <span>@TempData["Error"]</span>
         </div>
     }
 
-    <!-- Formulario de búsqueda -->
     <form method="post" action="/Buscador/Buscar" class="buscador-form">
         <input type="text" name="query" class="buscador-input"
                placeholder="Ej: Cervantes, Kafka, ciencia ficción…"
@@ -474,7 +528,6 @@
         <button type="submit" class="buscador-btn">Buscar</button>
     </form>
 
-    <!-- Resultados -->
     @if (Model != null && Model.Any())
     {
         <p class="resultado-count">
@@ -485,46 +538,66 @@
             @foreach (var libro in Model)
             {
                 <div class="libro-card">
-                    <!-- Portada -->
                     @if (!string.IsNullOrEmpty(libro.Portada))
                     {
                         <img src="@libro.Portada"
                              class="libro-portada"
                              alt="Portada de @libro.Titulo"
                              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-                        <div class="libro-portada-placeholder" style="display:none">📖</div>
+                        <div class="libro-portada-placeholder" style="display:none">
+                            <svg><use href="#ico-book" /></svg>
+                        </div>
                     }
                     else
                     {
-                        <div class="libro-portada-placeholder">📖</div>
+                        <div class="libro-portada-placeholder">
+                            <svg><use href="#ico-book" /></svg>
+                        </div>
                     }
 
                     <div class="libro-body">
-                        <!-- Badges -->
                         <div class="libro-badges">
                             @if (libro.Idioma == "es")
                             {
-                                <span class="libro-badge badge-es">🇪🇸 Español</span>
+                                <span class="libro-badge badge-es">
+                                    <svg><use href="#ico-globe" /></svg>
+                                    Español
+                                </span>
                             }
                             else
                             {
-                                <span class="libro-badge badge-lang">🌐 @libro.Idioma.ToUpper()</span>
+                                <span class="libro-badge badge-lang">
+                                    <svg><use href="#ico-globe" /></svg>
+                                    @libro.Idioma.ToUpper()
+                                </span>
                             }
                             <span class="libro-badge @(libro.Fuente == "Gutenberg" ? "badge-gutendex" : "badge-openlibrary")">
                                 @libro.Fuente
                             </span>
-                            <span class="libro-badge badge-formato">@libro.Formato.ToUpper()</span>
+                            <span class="libro-badge badge-formato">
+                                <svg><use href="#ico-file" /></svg>
+                                @libro.Formato.ToUpper()
+                            </span>
                             @if (libro.Fuente == "Open Library")
                             {
-                                <span class="libro-badge badge-advertencia">⚠ variable</span>
+                                <span class="libro-badge badge-advertencia">
+                                    <svg><use href="#ico-alert" /></svg>
+                                    variable
+                                </span>
                             }
                         </div>
 
                         <p class="libro-titulo">@libro.Titulo</p>
-                        <p class="libro-meta">✍️ @libro.Autor</p>
-                        <p class="libro-meta">📚 @libro.Genero</p>
 
-                        <!-- Botón importar -->
+                        <p class="libro-meta">
+                            <svg><use href="#ico-user" /></svg>
+                            @libro.Autor
+                        </p>
+                        <p class="libro-meta">
+                            <svg><use href="#ico-tag" /></svg>
+                            @libro.Genero
+                        </p>
+
                         <form method="post"
                               action="/Buscador/ImportarLibro"
                               style="margin-top:.75rem"
@@ -537,7 +610,8 @@
                             <input type="hidden" name="formato" value="@libro.Formato" />
 
                             <button type="submit" class="btn-importar">
-                                <span class="btn-texto">➕ Agregar a mi biblioteca</span>
+                                <svg><use href="#ico-plus" /></svg>
+                                <span class="btn-texto">Agregar a mi biblioteca</span>
                                 <div class="spinner"></div>
                             </button>
                         </form>
@@ -549,7 +623,9 @@
     else if (ViewBag.Query != null)
     {
         <div class="sin-resultados">
-            <span class="sin-icono">🔍</span>
+            <div class="sin-icono">
+                <svg><use href="#ico-search" /></svg>
+            </div>
             <p>No se encontraron libros descargables para <strong>"@ViewBag.Query"</strong>.</p>
             <p class="hint">Intenta con otro término o busca en inglés.</p>
         </div>
@@ -557,8 +633,10 @@
     else
     {
         <div class="sin-resultados">
-            <span class="sin-icono">📚</span>
-            <p>Busca títulos gratuitos de <strong>Project Gutenberg</strong>.</p>
+            <div class="sin-icono">
+                <svg><use href="#ico-book" /></svg>
+            </div>
+            <p>Busca títulos gratuitos de <strong>Open Library</strong>.</p>
             <p class="hint">Prueba con un autor, título o género.</p>
         </div>
     }
@@ -568,13 +646,10 @@
     <script>
         function mostrarCargando(form) {
             document.querySelectorAll('.btn-importar').forEach(b => b.disabled = true);
-
             const btn = form.querySelector('.btn-importar');
             btn.querySelector('.btn-texto').style.display = 'none';
             btn.querySelector('.spinner').style.display = 'block';
-
             document.getElementById('overlayImportando').classList.add('activo');
-
             const mensajes = [
                 'Descargando archivo…',
                 'Procesando páginas…',
