@@ -4,44 +4,13 @@
 }
 
 <link rel="stylesheet" href="~/css/Top.css" asp-append-version="true" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 
 <div class="top-wrapper">
 
     <div class="top-header">
         <h1 class="top-title">Mi TOP de Libros</h1>
-        <p class="top-subtitle">Arrastra las tarjetas para ordenar tu ranking personal</p>
-    </div>
-
-    <div id="topLibros" class="top-grid">
-        @for (int i = 0; i < Model.Count; i++)
-        {
-            var libro = Model[i];
-            <div class="top-card" draggable="true" data-id="@libro.LibroId">
-                <div class="top-card__pos">#@(i + 1)</div>
-                <div class="top-card__body">
-                    <h3 class="top-card__titulo">@libro.Titulo</h3>
-                    <p class="top-card__autor">@libro.Autor</p>
-                    <span class="top-card__genero">@libro.Genero</span>
-                    <div class="top-card__progreso-wrap">
-                        <div class="top-card__progreso-bar">
-                            <div class="top-card__progreso-fill"
-                                 style="width:@libro.Progreso%"></div>
-                        </div>
-                        <span class="top-card__progreso-pct">@libro.Progreso%</span>
-                    </div>
-                </div>
-                <div class="top-card__drag-handle">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="9" cy="5" r="1" fill="currentColor" stroke="none" />
-                        <circle cx="15" cy="5" r="1" fill="currentColor" stroke="none" />
-                        <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none" />
-                        <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" />
-                        <circle cx="9" cy="19" r="1" fill="currentColor" stroke="none" />
-                        <circle cx="15" cy="19" r="1" fill="currentColor" stroke="none" />
-                    </svg>
-                </div>
-            </div>
-        }
+        <p class="top-subtitle">Tu ranking personal de lecturas</p>
     </div>
 
     @if (!Model.Any())
@@ -49,13 +18,155 @@
         <div class="top-empty">
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="1.4"
-                 stroke-linecap="round" stroke-linejoin="round"
-                 style="color: var(--ink-ghost)">
+                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
             <p>No tienes libros en tu lista todavía.</p>
         </div>
+    }
+    else
+    {
+        <!-- PODIUM: top 3 -->
+        <div class="podium-stage">
+
+            @* Posición 2 *@
+            @if (Model.Count >= 2)
+            {
+                var p2 = Model[1];
+                <div class="podium-slot podium-slot--2" data-id="@p2.LibroId">
+                    <div class="podium-medal podium-medal--2">2</div>
+                    <div class="podium-cover">
+                        @if (!string.IsNullOrEmpty(p2.PortadaUrl))
+                        {
+                            <img src="@p2.PortadaUrl" alt="@p2.Titulo" />
+                        }
+                        else
+                        {
+                            <div class="podium-cover__fallback podium-cover__fallback--2">
+                                <span>@p2.Titulo.Substring(0, 1).ToUpper()</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="podium-info">
+                        <h3 class="podium-titulo">@p2.Titulo</h3>
+                        <p class="podium-autor">@p2.Autor</p>
+                    </div>
+                    <div class="podium-block podium-block--2">
+                        <span class="podium-block__num">#2</span>
+                    </div>
+                </div>
+            }
+
+            @* Posición 1 *@
+            @if (Model.Count >= 1)
+            {
+                var p1 = Model[0];
+                <div class="podium-slot podium-slot--1" data-id="@p1.LibroId">
+                    <div class="podium-crown">
+                        <svg viewBox="0 0 24 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M1 13 L4 3 L8.5 8 L12 1 L15.5 8 L20 3 L23 13 Z" fill="#F5C842" stroke="#e6a800" stroke-width="0.8" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <div class="podium-medal podium-medal--1">1</div>
+                    <div class="podium-cover podium-cover--1">
+                        @if (!string.IsNullOrEmpty(p1.PortadaUrl))
+                        {
+                            <img src="@p1.PortadaUrl" alt="@p1.Titulo" />
+                        }
+                        else
+                        {
+                            <div class="podium-cover__fallback podium-cover__fallback--1">
+                                <span>@p1.Titulo.Substring(0, 1).ToUpper()</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="podium-info">
+                        <h3 class="podium-titulo podium-titulo--1">@p1.Titulo</h3>
+                        <p class="podium-autor">@p1.Autor</p>
+                    </div>
+                    <div class="podium-block podium-block--1">
+                        <span class="podium-block__num">#1</span>
+                    </div>
+                </div>
+            }
+
+            @* Posición 3 *@
+            @if (Model.Count >= 3)
+            {
+                var p3 = Model[2];
+                <div class="podium-slot podium-slot--3" data-id="@p3.LibroId">
+                    <div class="podium-medal podium-medal--3">3</div>
+                    <div class="podium-cover">
+                        @if (!string.IsNullOrEmpty(p3.PortadaUrl))
+                        {
+                            <img src="@p3.PortadaUrl" alt="@p3.Titulo" />
+                        }
+                        else
+                        {
+                            <div class="podium-cover__fallback podium-cover__fallback--3">
+                                <span>@p3.Titulo.Substring(0, 1).ToUpper()</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="podium-info">
+                        <h3 class="podium-titulo">@p3.Titulo</h3>
+                        <p class="podium-autor">@p3.Autor</p>
+                    </div>
+                    <div class="podium-block podium-block--3">
+                        <span class="podium-block__num">#3</span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- LISTA: posición 4 en adelante -->
+        @if (Model.Count > 3)
+        {
+            <div class="top-list-header">
+                <span>Arrastra para reordenar</span>
+            </div>
+            <div id="topLibros" class="top-list">
+                @for (int i = 3; i < Model.Count; i++)
+                {
+                    var libro = Model[i];
+                    <div class="top-list-card" draggable="true" data-id="@libro.LibroId">
+                        <span class="top-list-card__pos">#@(i + 1)</span>
+                        <div class="top-list-card__cover">
+                            @if (!string.IsNullOrEmpty(libro.PortadaUrl))
+                            {
+                                <img src="@libro.PortadaUrl" alt="@libro.Titulo" />
+                            }
+                            else
+                            {
+                                <div class="top-list-card__cover-fallback">@libro.Titulo.Substring(0, 1).ToUpper()</div>
+                            }
+                        </div>
+                        <div class="top-list-card__body">
+                            <h3 class="top-list-card__titulo">@libro.Titulo</h3>
+                            <p class="top-list-card__autor">@libro.Autor</p>
+                            <span class="top-list-card__genero">@libro.Genero</span>
+                        </div>
+                        <div class="top-list-card__progreso-wrap">
+                            <div class="top-list-card__progreso-bar">
+                                <div class="top-list-card__progreso-fill" style="width:@libro.Progreso%"></div>
+                            </div>
+                            <span class="top-list-card__progreso-pct">@libro.Progreso%</span>
+                        </div>
+                        <div class="top-list-card__drag-handle">
+                            <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                                <circle cx="9" cy="5" r="1.2" fill="var(--ink-ghost)" />
+                                <circle cx="15" cy="5" r="1.2" fill="var(--ink-ghost)" />
+                                <circle cx="9" cy="12" r="1.2" fill="var(--ink-ghost)" />
+                                <circle cx="15" cy="12" r="1.2" fill="var(--ink-ghost)" />
+                                <circle cx="9" cy="19" r="1.2" fill="var(--ink-ghost)" />
+                                <circle cx="15" cy="19" r="1.2" fill="var(--ink-ghost)" />
+                            </svg>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     }
 
     <div class="top-actions">
@@ -74,43 +185,56 @@
 
 @section Scripts {
     <script>
-        // ── Drag & Drop ───────────────────────────────────────────
-        const grid    = document.getElementById('topLibros');
-        let dragging  = null;
+        const list = document.getElementById('topLibros');
+        let dragging = null;
 
-        grid.addEventListener('dragstart', e => {
-            dragging = e.target.closest('.top-card');
-            setTimeout(() => dragging?.classList.add('top-card--dragging'), 0);
-        });
+        if (list) {
+            list.addEventListener('dragstart', e => {
+                dragging = e.target.closest('.top-list-card');
+                setTimeout(() => dragging?.classList.add('top-list-card--dragging'), 0);
+            });
 
-        grid.addEventListener('dragend', () => {
-            dragging?.classList.remove('top-card--dragging');
-            dragging = null;
-            actualizarPosiciones();
-        });
+            list.addEventListener('dragend', () => {
+                dragging?.classList.remove('top-list-card--dragging');
+                dragging = null;
+                actualizarPosiciones();
+            });
 
-        grid.addEventListener('dragover', e => {
-            e.preventDefault();
-            const over = e.target.closest('.top-card');
-            if (!over || over === dragging) return;
-            const rect  = over.getBoundingClientRect();
-            const after = e.clientY > rect.top + rect.height / 2;
-            grid.insertBefore(dragging, after ? over.nextSibling : over);
-        });
-
-        function actualizarPosiciones() {
-            grid.querySelectorAll('.top-card__pos').forEach((el, i) => {
-                el.textContent = `#${i + 1}`;
+            list.addEventListener('dragover', e => {
+                e.preventDefault();
+                const over = e.target.closest('.top-list-card');
+                if (!over || over === dragging) return;
+                const rect  = over.getBoundingClientRect();
+                const after = e.clientY > rect.top + rect.height / 2;
+                list.insertBefore(dragging, after ? over.nextSibling : over);
             });
         }
 
-        // ── Guardar orden ─────────────────────────────────────────
+        function actualizarPosiciones() {
+            if (!list) return;
+            list.querySelectorAll('.top-list-card__pos').forEach((el, i) => {
+                el.textContent = `#${i + 4}`;
+            });
+        }
+
         function guardarOrden() {
-            const cards = document.querySelectorAll(".top-card");
-            const orden = Array.from(cards).map((c, i) => ({
-                libroId: parseInt(c.dataset.id),
-                posicion: i + 1
-            }));
+            // Podium fijos
+            const orden = [];
+            document.querySelectorAll('.podium-slot').forEach(el => {
+                const pos = el.classList.contains('podium-slot--1') ? 1
+                          : el.classList.contains('podium-slot--2') ? 2 : 3;
+                orden.push({ libroId: parseInt(el.dataset.id), posicion: pos });
+            });
+
+            // Lista draggable
+            if (list) {
+                list.querySelectorAll('.top-list-card').forEach((c, i) => {
+                    orden.push({ libroId: parseInt(c.dataset.id), posicion: i + 4 });
+                });
+            }
+
+            // Ordenar por posicion
+            orden.sort((a, b) => a.posicion - b.posicion);
 
             fetch("/Lector/GuardarOrden", {
                 method: "POST",
@@ -119,20 +243,15 @@
             })
             .then(res => res.json())
             .then(data => mostrarToast(data.mensaje))
-            .catch(err => mostrarToast("Error al guardar TOP", false));
+            .catch(() => mostrarToast("Error al guardar TOP", false));
         }
 
-
-
-        // ── Toast ─────────────────────────────────────────────────
         function mostrarToast(msg, ok = true) {
             const t = document.getElementById('topToast');
             t.textContent = msg;
-            t.className   = `top-toast top-toast--visible ${ok ? '' : 'top-toast--error'}`;
+            t.className = `top-toast top-toast--visible ${ok ? '' : 'top-toast--error'}`;
             setTimeout(() => t.className = 'top-toast', 3000);
-
         }
-
     </script>
     @Html.AntiForgeryToken()
 }

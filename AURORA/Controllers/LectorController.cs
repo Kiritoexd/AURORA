@@ -244,7 +244,8 @@ namespace AURORA.Controllers
                     Autor = u.Libro.Autor ?? "Desconocido",
                     Genero = u.Libro.Genero ?? "N/A",
                     Progreso = u.Progreso,
-                    Posicion = u.Posicion
+                    Posicion = u.Posicion,
+                    PortadaUrl = u.Libro.PortadaUrl   // ← esta línea
                 })
                 .ToListAsync();
 

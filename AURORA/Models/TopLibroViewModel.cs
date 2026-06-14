@@ -10,5 +10,6 @@ namespace AURORA.Models
         public string Genero { get; set; } = "";
         public int Progreso { get; set; }
         public int Posicion { get; set; }
+        public string? PortadaUrl { get; set; }  // ← añade esta línea
     }
 }
