@@ -620,47 +620,51 @@ namespace AURORA.Controllers
             return View(BuildViewModel(estado, reclamadosDB));
         }
 
-        // ─── FIX PRINCIPAL: ahora reconstruye el estado desde BD antes de validar ───
         [HttpPost]
-        [Authorize(Roles = "Lector")]          // ← agregado
+        [Authorize(Roles = "Lector")]
         [ValidateAntiForgeryToken]
         public IActionResult Reclamar(string id)
         {
-            var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
-            var def = LOGROS_DEF.FirstOrDefault(d => d.Id == id);
-            if (def is null)
-                return Json(new { ok = false, msg = "Logro no encontrado." });
-
-            var yaEnBD = _context.LogrosReclamados
-                .Any(l => l.UsuarioId == usuarioId && l.LogroId == id);
-            if (yaEnBD)
-                return Json(new { ok = false, msg = "Ya reclamado." });
-
-            // ← FIX: reconstruir estado desde BD (CargarEstado() devuelve vacío,
-            //   por eso entrada.Completado siempre era false y nunca dejaba reclamar)
-            var reclamadosDB = _context.LogrosReclamados
-                .Where(l => l.UsuarioId == usuarioId)
-                .Select(l => l.LogroId)
-                .ToHashSet();
-
-            var estado = CargarEstado();
-            SincronizarLogrosDesdeDB(ref estado, usuarioId, reclamadosDB);
-
-            var entrada = estado.ContainsKey(id) ? estado[id] : new LogroEntrada();
-
-            if (!entrada.Completado)
-                return Json(new { ok = false, msg = "Logro no completado aún." });
-
-            _context.LogrosReclamados.Add(new Tb_LogroReclamado
+            try
             {
-                UsuarioId = usuarioId,
-                LogroId = id,
-                FechaReclamo = DateTime.UtcNow
-            });
-            _context.SaveChanges();
+                var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            return Json(new { ok = true, nombre = def.Nombre });
+                var def = LOGROS_DEF.FirstOrDefault(d => d.Id == id);
+                if (def is null)
+                    return Json(new { ok = false, msg = "Logro no encontrado." });
+
+                var yaEnBD = _context.LogrosReclamados
+                    .Any(l => l.UsuarioId == usuarioId && l.LogroId == id);
+                if (yaEnBD)
+                    return Json(new { ok = false, msg = "Ya reclamado." });
+
+                var reclamadosDB = _context.LogrosReclamados
+                    .Where(l => l.UsuarioId == usuarioId)
+                    .Select(l => l.LogroId)
+                    .ToHashSet();
+
+                var estado = CargarEstado();
+                SincronizarLogrosDesdeDB(ref estado, usuarioId, reclamadosDB);
+
+                var entrada = estado.ContainsKey(id) ? estado[id] : new LogroEntrada();
+
+                if (!entrada.Completado)
+                    return Json(new { ok = false, msg = $"No completado. Progreso: {entrada.Progreso}/{def.Meta}" });
+
+                _context.LogrosReclamados.Add(new Tb_LogroReclamado
+                {
+                    UsuarioId = usuarioId,
+                    LogroId = id,
+                    FechaReclamo = DateTime.UtcNow
+                });
+                _context.SaveChanges();
+
+                return Json(new { ok = true, nombre = def.Nombre });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ok = false, msg = ex.Message });
+            }
         }
 
         [HttpPost]
