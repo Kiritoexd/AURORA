@@ -1,4 +1,4 @@
-﻿                using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text;
 
 namespace AURORA.Servicios
@@ -14,6 +14,95 @@ namespace AURORA.Servicios
             _http.Timeout = TimeSpan.FromSeconds(30);
             _http.DefaultRequestHeaders.Add("User-Agent", "AURORA-App/1.0 (contacto@aurora.app)");
             _logger = logger;
+        }
+
+        // Diccionario inglés → español para géneros de Open Library
+        private static readonly Dictionary<string, string> _generoEs = new(StringComparer.OrdinalIgnoreCase)
+        {
+            // Ficción y narrativa
+            ["Fiction"] = "Ficción",
+            ["Novel"] = "Novela",
+            ["Novels"] = "Novela",
+            ["Short stories"] = "Cuentos",
+            ["Short story"] = "Cuento",
+            ["Science fiction"] = "Ciencia ficción",
+            ["Fantasy fiction"] = "Fantasía",
+            ["Fantasy"] = "Fantasía",
+            ["Horror"] = "Terror",
+            ["Horror tales"] = "Terror",
+            ["Mystery fiction"] = "Misterio",
+            ["Mystery"] = "Misterio",
+            ["Detective and mystery stories"] = "Misterio",
+            ["Adventure stories"] = "Aventura",
+            ["Adventure"] = "Aventura",
+            ["Romance"] = "Romance",
+            ["Love stories"] = "Romance",
+            ["Historical fiction"] = "Ficción histórica",
+            ["Fairy tales"] = "Cuentos de hadas",
+            ["Folklore"] = "Folclore",
+            ["Legends"] = "Leyendas",
+            ["Mythology"] = "Mitología",
+            ["Satire"] = "Sátira",
+            ["Humorous stories"] = "Humor",
+            ["Humor"] = "Humor",
+            ["Comedy"] = "Comedia",
+            ["Tragedy"] = "Tragedia",
+            // Teatro y poesía
+            ["Drama"] = "Teatro",
+            ["Plays"] = "Teatro",
+            ["Poetry"] = "Poesía",
+            ["Poems"] = "Poesía",
+            ["Epic poetry"] = "Poesía épica",
+            // No ficción
+            ["History"] = "Historia",
+            ["Biography"] = "Biografía",
+            ["Autobiography"] = "Autobiografía",
+            ["Autobiography. lcgft"] = "Autobiografía",
+            ["Memoirs"] = "Memorias",
+            ["Essays"] = "Ensayo",
+            ["Literature"] = "Literatura",
+            ["Philosophy"] = "Filosofía",
+            ["Science"] = "Ciencia",
+            ["Natural history"] = "Historia natural",
+            ["Geography"] = "Geografía",
+            ["Travel"] = "Viajes",
+            ["Voyages and travels"] = "Viajes",
+            ["Religion"] = "Religión",
+            ["Theology"] = "Teología",
+            ["Politics"] = "Política",
+            ["Politics and government"] = "Política",
+            ["Political science"] = "Ciencias políticas",
+            ["Economics"] = "Economía",
+            ["Sociology"] = "Sociología",
+            ["Psychology"] = "Psicología",
+            ["Education"] = "Educación",
+            ["Mathematics"] = "Matemáticas",
+            ["Physics"] = "Física",
+            ["Chemistry"] = "Química",
+            ["Medicine"] = "Medicina",
+            ["Law"] = "Derecho",
+            ["Art"] = "Arte",
+            ["Music"] = "Música",
+            ["Architecture"] = "Arquitectura",
+            ["Cooking"] = "Cocina",
+            ["Sports"] = "Deportes",
+            ["Technology"] = "Tecnología",
+            ["Accessible book"] = "General",
+            ["Protected DAISY"] = "General",
+        };
+
+        private static string TraducirGenero(string generoEn)
+        {
+            if (string.IsNullOrWhiteSpace(generoEn)) return "General";
+            // Buscar coincidencia exacta primero
+            if (_generoEs.TryGetValue(generoEn.Trim(), out var traduccion))
+                return traduccion;
+            // Buscar si el género empieza con alguna clave conocida
+            foreach (var kv in _generoEs)
+                if (generoEn.StartsWith(kv.Key, StringComparison.OrdinalIgnoreCase))
+                    return kv.Value;
+            // Si no se encontró traducción, devolver el original
+            return generoEn;
         }
 
         private static string QuitarTildes(string texto)
@@ -91,7 +180,26 @@ namespace AURORA.Servicios
                     var genero = "General";
                     if (item.TryGetProperty("subject", out var subjects) && subjects.GetArrayLength() > 0)
                     {
-                        genero = subjects[0].GetString() ?? "General";
+                        // Open Library devuelve subjects como "Don Quixote (Cervantes...)" o "Fiction -- Spain"
+                        // Buscamos el primer subject que parezca un género real, no un título/autor
+                        var generosLimpios = new[] { "Fiction", "Novel", "Drama", "Poetry", "History",
+                            "Science", "Philosophy", "Romance", "Adventure", "Fantasy", "Mystery",
+                            "Biography", "Essays", "Literature", "Horror", "Novela", "Cuento",
+                            "Poesía", "Teatro", "Historia", "Ciencia", "Filosofía" };
+
+                        string? encontrado = null;
+                        foreach (var subj in subjects.EnumerateArray())
+                        {
+                            var s = subj.GetString() ?? "";
+                            // Ignorar si contiene paréntesis (suele ser "Título (Autor)")
+                            if (s.Contains('(')) continue;
+                            // Ignorar si es muy largo o tiene --
+                            if (s.Length > 40 || s.Contains(" -- ")) continue;
+                            encontrado = s;
+                            break;
+                        }
+
+                        genero = TraducirGenero(encontrado ?? "General");
                         if (genero.Length > 50) genero = genero[..50];
                     }
 
