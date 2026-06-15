@@ -64,6 +64,7 @@ namespace AURORA.Controllers
                 return View("Index", new List<LibroExterno>());
             }
         }
+
         [HttpPost]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ImportarLibro(
@@ -72,23 +73,55 @@ namespace AURORA.Controllers
         {
             try
             {
-                // 1. Descargar archivo
+                byte[] archivoBytes;
+
+                // 1. Intentar descargar archivo original
                 var request = new HttpRequestMessage(HttpMethod.Get, urlDescarga);
                 request.Headers.Add("User-Agent",
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+                request.Headers.Add("Accept", "application/pdf,application/epub+zip,*/*");
+                request.Headers.Add("Accept-Language", "es-MX,es;q=0.9,en;q=0.8");
+                request.Headers.Add("Referer", "https://www.gutenberg.org/");
+
                 var archivoResponse = await _http.SendAsync(request);
 
                 if (!archivoResponse.IsSuccessStatusCode)
                 {
-                    TempData["Error"] = $"No se pudo descargar ({(int)archivoResponse.StatusCode}). Intenta con otro libro.";
-                    return RedirectToAction("Index");
-                }
+                    // Fallback automático a TXT de Gutenberg
+                    var match = System.Text.RegularExpressions.Regex.Match(
+                        urlDescarga, @"/ebooks/(\d+)");
 
-                var archivoBytes = await archivoResponse.Content.ReadAsByteArrayAsync();
+                    if (!match.Success)
+                    {
+                        TempData["Error"] = $"No se pudo descargar ({(int)archivoResponse.StatusCode}). Intenta con otro libro.";
+                        return RedirectToAction("Index");
+                    }
+
+                    var libroId = match.Groups[1].Value;
+                    var urlTxt = $"https://www.gutenberg.org/cache/epub/{libroId}/pg{libroId}.txt";
+
+                    var txtRequest = new HttpRequestMessage(HttpMethod.Get, urlTxt);
+                    txtRequest.Headers.Add("User-Agent", "Mozilla/5.0");
+                    var txtResponse = await _http.SendAsync(txtRequest);
+
+                    if (!txtResponse.IsSuccessStatusCode)
+                    {
+                        TempData["Error"] = $"No se pudo descargar el libro ({(int)txtResponse.StatusCode}). Intenta con otro libro.";
+                        return RedirectToAction("Index");
+                    }
+
+                    var txtBytes = await txtResponse.Content.ReadAsByteArrayAsync();
+                    archivoBytes = await _epubConverter.ConvertirTxtAPdfAsync(txtBytes, titulo, autor);
+                    formato = "pdf";
+                }
+                else
+                {
+                    archivoBytes = await archivoResponse.Content.ReadAsByteArrayAsync();
+                }
 
                 if (archivoBytes.Length < 2048)
                 {
-                    TempData["Error"] = "El archivo descargado est� vac�o. Intenta con otro libro.";
+                    TempData["Error"] = "El archivo descargado está vacío. Intenta con otro libro.";
                     return RedirectToAction("Index");
                 }
 
@@ -102,52 +135,43 @@ namespace AURORA.Controllers
                     }
                     catch
                     {
-                        // ? Extraer el ID del libro de la URL y construir URL correcta
-                        // URL original: https://www.gutenberg.org/ebooks/66263.epub3.images
-                        // URL TXT:      https://www.gutenberg.org/cache/epub/66263/pg66263.txt
                         try
                         {
-                            // Extraer n�mero de libro de la URL
                             var match = System.Text.RegularExpressions.Regex.Match(
                                 urlDescarga, @"/ebooks/(\d+)");
 
-                            string urlTxt;
-                            if (match.Success)
-                            {
-                                var libroId = match.Groups[1].Value;
-                                urlTxt = $"https://www.gutenberg.org/cache/epub/{libroId}/pg{libroId}.txt";
-                            }
-                            else
+                            if (!match.Success)
                             {
                                 TempData["Error"] = "No se pudo convertir este libro. Intenta con otro resultado.";
                                 return RedirectToAction("Index");
                             }
 
+                            var libroId = match.Groups[1].Value;
+                            var urlTxt = $"https://www.gutenberg.org/cache/epub/{libroId}/pg{libroId}.txt";
+
                             var txtRequest = new HttpRequestMessage(HttpMethod.Get, urlTxt);
                             txtRequest.Headers.Add("User-Agent", "Mozilla/5.0");
                             var txtResponse = await _http.SendAsync(txtRequest);
 
-                            if (txtResponse.IsSuccessStatusCode)
-                            {
-                                var txtBytes = await txtResponse.Content.ReadAsByteArrayAsync();
-                                archivoBytes = await _epubConverter.ConvertirTxtAPdfAsync(
-                                    txtBytes, titulo, autor);
-                                formato = "pdf";
-                            }
-                            else
+                            if (!txtResponse.IsSuccessStatusCode)
                             {
                                 TempData["Error"] = $"No se pudo obtener el texto ({(int)txtResponse.StatusCode}). Intenta con otro resultado.";
                                 return RedirectToAction("Index");
                             }
+
+                            var txtBytes = await txtResponse.Content.ReadAsByteArrayAsync();
+                            archivoBytes = await _epubConverter.ConvertirTxtAPdfAsync(txtBytes, titulo, autor);
+                            formato = "pdf";
                         }
                         catch (Exception ex)
                         {
-                            TempData["Error"] = $"Error: {ex.GetType().Name} - {ex.Message} - Inner: {ex.InnerException?.Message} - {ex.InnerException?.InnerException?.Message}";
+                            TempData["Error"] = $"Error convirtiendo EPUB: {ex.Message}";
                             return RedirectToAction("Index");
                         }
                     }
                 }
-                // 3. Verificar que sea PDF v�lido
+
+                // 3. Verificar PDF válido
                 bool esPdf = archivoBytes.Length > 4 &&
                              archivoBytes[0] == 0x25 &&
                              archivoBytes[1] == 0x50 &&
@@ -156,11 +180,11 @@ namespace AURORA.Controllers
 
                 if (!esPdf)
                 {
-                    TempData["Error"] = "El archivo no es un PDF v�lido tras la conversi�n.";
+                    TempData["Error"] = "El archivo no es un PDF válido tras la conversión.";
                     return RedirectToAction("Index");
                 }
 
-                // 4. Extraer texto y guardar PDF en PostgreSQL
+                // 4. Extraer texto y páginas
                 string contenidoTexto = "";
                 int totalPaginas = 0;
                 try
@@ -186,13 +210,13 @@ namespace AURORA.Controllers
                     Paginas = totalPaginas > 0 ? totalPaginas : 0,
                     RutaPdf = null,
                     ContenidoTexto = contenidoTexto,
-                    PdfBytes = archivoBytes      // guardado en PostgreSQL
+                    PdfBytes = archivoBytes
                 };
 
                 _context.Libros.Add(libro);
                 await _context.SaveChangesAsync();
 
-                // 7. Vincular al usuario
+                // 6. Vincular al usuario
                 var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
                 _context.UsuarioLibros.Add(new Tb_UsuarioLibro
                 {
@@ -204,12 +228,12 @@ namespace AURORA.Controllers
                 });
                 await _context.SaveChangesAsync();
 
-                TempData["Exito"] = $"? '{titulo}' agregado con {totalPaginas} p�ginas.";
+                TempData["Exito"] = $"✅ '{titulo}' agregado con {totalPaginas} páginas.";
                 return RedirectToAction("Biblioteca", "Lector");
             }
             catch (TaskCanceledException)
             {
-                TempData["Error"] = "La descarga tard� demasiado. Intenta con otro libro.";
+                TempData["Error"] = "La descarga tardó demasiado. Intenta con otro libro.";
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
