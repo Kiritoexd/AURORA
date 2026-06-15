@@ -171,7 +171,21 @@ namespace AURORA.Controllers
             TempData["Mensaje"] = "Se ha enviado un codigo de recuperacion a tu correo.";
             return RedirectToAction("IngresarCodigo");
         }
+        [HttpPost]
+        public async Task<IActionResult> ContactarAdmin([FromBody] ContactarAdminDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Correo) || string.IsNullOrWhiteSpace(dto.Mensaje))
+                return BadRequest();
 
+            await _emailService.SendAdminAccessRequestAsync(dto.Correo, dto.Mensaje);
+            return Ok();
+        }
+
+        public class ContactarAdminDto
+        {
+            public string Correo { get; set; } = "";
+            public string Mensaje { get; set; } = "";
+        }
         [HttpGet]
         public IActionResult IngresarCodigo() => View();
 

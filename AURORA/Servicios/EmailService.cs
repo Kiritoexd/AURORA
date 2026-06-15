@@ -11,7 +11,80 @@ namespace AURORA.Servicios
         {
             _apiKey = configuration["EmailSettings:SendGridApiKey"] ?? "";
         }
+        // Agregar este método dentro de la clase EmailService
 
+        public async Task SendAdminAccessRequestAsync(string fromEmail, string mensaje)
+        {
+            var client = new SendGridClient(_apiKey);
+            var msg = new SendGridMessage
+            {
+                From = new EmailAddress("auroraappoficial@gmail.com", "AURORA"),
+                Subject = "⚠️ Solicitud de acceso · AURORA",
+                HtmlContent = $@"
+<!DOCTYPE html>
+<html lang=""es"">
+<head><meta charset=""utf-8""/></head>
+<body style=""margin:0;padding:0;background:#f7f3ec;font-family:Arial,sans-serif;"">
+  <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""padding:40px 16px;"">
+    <tr><td align=""center"">
+      <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+             style=""max-width:480px;background:#ffffff;border-radius:14px;border:1px solid rgba(28,24,20,0.10);overflow:hidden;"">
+
+        <tr>
+          <td style=""height:4px;background:linear-gradient(90deg,#b85c38,#d4795a);""></td>
+        </tr>
+
+        <tr>
+          <td style=""padding:32px 36px 0;text-align:center;"">
+            <p style=""margin:0;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#b0a498;"">AURORA</p>
+            <h1 style=""margin:12px 0 0;font-size:20px;font-weight:700;color:#1c1814;"">Solicitud de acceso denegado</h1>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=""padding:20px 36px 0;"">
+            <p style=""margin:0;font-size:13px;color:#7a6e63;line-height:1.7;"">
+              Un usuario ha solicitado aclarar su situación de acceso.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=""padding:16px 36px 0;"">
+            <div style=""background:#efe9de;border-radius:8px;padding:14px 16px;border:1px solid rgba(28,24,20,0.08);"">
+              <p style=""margin:0 0 6px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#b0a498;"">Correo del usuario</p>
+              <p style=""margin:0;font-size:14px;font-weight:600;color:#1c1814;"">{fromEmail}</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=""padding:12px 36px 0;"">
+            <div style=""background:#efe9de;border-radius:8px;padding:14px 16px;border:1px solid rgba(28,24,20,0.08);"">
+              <p style=""margin:0 0 6px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#b0a498;"">Mensaje</p>
+              <p style=""margin:0;font-size:14px;color:#3d352c;line-height:1.6;"">{mensaje}</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=""padding:28px 36px 32px;"">
+            <div style=""border-top:1px solid rgba(28,24,20,0.08);padding-top:20px;text-align:center;"">
+              <p style=""margin:0;font-size:11px;color:#b0a498;"">© 2026 AURORA App · Mensaje enviado desde la página de acceso denegado.</p>
+            </div>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"
+            };
+
+            msg.AddTo(new EmailAddress("auroraappoficial@gmail.com", "Admin AURORA"));
+            await client.SendEmailAsync(msg);
+        }
         public async Task SendPasswordRecoveryCodeAsync(string toEmail, string code)
         {
             var codeBoxes = string.Join("", code.Select(c => $@"
