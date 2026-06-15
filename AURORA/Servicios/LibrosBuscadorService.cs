@@ -16,92 +16,55 @@ namespace AURORA.Servicios
             _logger = logger;
         }
 
-        // Diccionario inglés → español para géneros de Open Library
         private static readonly Dictionary<string, string> _generoEs = new(StringComparer.OrdinalIgnoreCase)
         {
-            // Ficción y narrativa
             ["Fiction"] = "Ficción",
             ["Novel"] = "Novela",
-            ["Novels"] = "Novela",
             ["Short stories"] = "Cuentos",
-            ["Short story"] = "Cuento",
             ["Science fiction"] = "Ciencia ficción",
             ["Fantasy fiction"] = "Fantasía",
             ["Fantasy"] = "Fantasía",
             ["Horror"] = "Terror",
-            ["Horror tales"] = "Terror",
             ["Mystery fiction"] = "Misterio",
             ["Mystery"] = "Misterio",
-            ["Detective and mystery stories"] = "Misterio",
             ["Adventure stories"] = "Aventura",
             ["Adventure"] = "Aventura",
             ["Romance"] = "Romance",
-            ["Love stories"] = "Romance",
             ["Historical fiction"] = "Ficción histórica",
             ["Fairy tales"] = "Cuentos de hadas",
-            ["Folklore"] = "Folclore",
-            ["Legends"] = "Leyendas",
             ["Mythology"] = "Mitología",
             ["Satire"] = "Sátira",
-            ["Humorous stories"] = "Humor",
             ["Humor"] = "Humor",
-            ["Comedy"] = "Comedia",
-            ["Tragedy"] = "Tragedia",
-            // Teatro y poesía
             ["Drama"] = "Teatro",
-            ["Plays"] = "Teatro",
             ["Poetry"] = "Poesía",
-            ["Poems"] = "Poesía",
-            ["Epic poetry"] = "Poesía épica",
-            // No ficción
             ["History"] = "Historia",
             ["Biography"] = "Biografía",
             ["Autobiography"] = "Autobiografía",
-            ["Autobiography. lcgft"] = "Autobiografía",
-            ["Memoirs"] = "Memorias",
             ["Essays"] = "Ensayo",
             ["Literature"] = "Literatura",
             ["Philosophy"] = "Filosofía",
             ["Science"] = "Ciencia",
-            ["Natural history"] = "Historia natural",
             ["Geography"] = "Geografía",
             ["Travel"] = "Viajes",
-            ["Voyages and travels"] = "Viajes",
             ["Religion"] = "Religión",
-            ["Theology"] = "Teología",
             ["Politics"] = "Política",
-            ["Politics and government"] = "Política",
-            ["Political science"] = "Ciencias políticas",
-            ["Economics"] = "Economía",
-            ["Sociology"] = "Sociología",
             ["Psychology"] = "Psicología",
             ["Education"] = "Educación",
             ["Mathematics"] = "Matemáticas",
-            ["Physics"] = "Física",
-            ["Chemistry"] = "Química",
             ["Medicine"] = "Medicina",
-            ["Law"] = "Derecho",
             ["Art"] = "Arte",
             ["Music"] = "Música",
-            ["Architecture"] = "Arquitectura",
-            ["Cooking"] = "Cocina",
-            ["Sports"] = "Deportes",
             ["Technology"] = "Tecnología",
-            ["Accessible book"] = "General",
-            ["Protected DAISY"] = "General",
         };
 
         private static string TraducirGenero(string generoEn)
         {
             if (string.IsNullOrWhiteSpace(generoEn)) return "General";
-            // Buscar coincidencia exacta primero
             if (_generoEs.TryGetValue(generoEn.Trim(), out var traduccion))
                 return traduccion;
-            // Buscar si el género empieza con alguna clave conocida
             foreach (var kv in _generoEs)
                 if (generoEn.StartsWith(kv.Key, StringComparison.OrdinalIgnoreCase))
                     return kv.Value;
-            // Si no se encontró traducción, devolver el original
             return generoEn;
         }
 
@@ -123,8 +86,8 @@ namespace AURORA.Servicios
             var querySinTilde = QuitarTildes(query);
 
             var tareas = await Task.WhenAll(
-                BuscarOpenLibrary(query),
-                BuscarOpenLibrary(querySinTilde)
+                BuscarGutendex(query),
+                BuscarGutendex(querySinTilde)
             );
 
             var resultados = tareas
@@ -138,107 +101,139 @@ namespace AURORA.Servicios
             return resultados;
         }
 
-        private async Task<List<LibroExterno>> BuscarOpenLibrary(string query)
+        private async Task<List<LibroExterno>> BuscarGutendex(string query)
         {
             try
             {
-                var url = $"https://openlibrary.org/search.json?q={Uri.EscapeDataString(query)}&has_fulltext=true&limit=20&fields=key,title,author_name,subject,language,ia,cover_i";
+                // Gutendex es la API oficial de Gutenberg — no bloquea servidores cloud
+                var url = $"https://gutendex.com/books?search={Uri.EscapeDataString(query)}&languages=en,es";
 
-                _logger.LogInformation("Consultando Open Library: {Url}", url);
+                _logger.LogInformation("Consultando Gutendex: {Url}", url);
 
                 var response = await _http.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Open Library respondió {Status} para '{Query}'", response.StatusCode, query);
+                    _logger.LogWarning("Gutendex respondió {Status}", response.StatusCode);
                     return new();
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
                 var root = JsonDocument.Parse(json).RootElement;
 
-                if (!root.TryGetProperty("docs", out var docs))
+                if (!root.TryGetProperty("results", out var results))
                     return new();
 
                 var libros = new List<LibroExterno>();
 
-                foreach (var item in docs.EnumerateArray())
+                foreach (var item in results.EnumerateArray())
                 {
-                    // Necesitamos el ID de Internet Archive para poder descargar
-                    if (!item.TryGetProperty("ia", out var iaArray) || iaArray.GetArrayLength() == 0)
-                        continue;
-
-                    var iaId = iaArray[0].GetString();
-                    if (string.IsNullOrEmpty(iaId)) continue;
-
-                    var titulo = item.TryGetProperty("title", out var t) ? t.GetString() ?? "Sin título" : "Sin título";
+                    var titulo = item.TryGetProperty("title", out var t)
+                        ? t.GetString() ?? "Sin título" : "Sin título";
 
                     var autor = "Desconocido";
-                    if (item.TryGetProperty("author_name", out var autores) && autores.GetArrayLength() > 0)
-                        autor = autores[0].GetString() ?? "Desconocido";
-
-                    var genero = "General";
-                    if (item.TryGetProperty("subject", out var subjects) && subjects.GetArrayLength() > 0)
+                    if (item.TryGetProperty("authors", out var autores) && autores.GetArrayLength() > 0)
                     {
-                        // Open Library devuelve subjects como "Don Quixote (Cervantes...)" o "Fiction -- Spain"
-                        // Buscamos el primer subject que parezca un género real, no un título/autor
-                        var generosLimpios = new[] { "Fiction", "Novel", "Drama", "Poetry", "History",
-                            "Science", "Philosophy", "Romance", "Adventure", "Fantasy", "Mystery",
-                            "Biography", "Essays", "Literature", "Horror", "Novela", "Cuento",
-                            "Poesía", "Teatro", "Historia", "Ciencia", "Filosofía" };
-
-                        string? encontrado = null;
-                        foreach (var subj in subjects.EnumerateArray())
-                        {
-                            var s = subj.GetString() ?? "";
-                            // Ignorar si contiene paréntesis (suele ser "Título (Autor)")
-                            if (s.Contains('(')) continue;
-                            // Ignorar si es muy largo o tiene --
-                            if (s.Length > 40 || s.Contains(" -- ")) continue;
-                            encontrado = s;
-                            break;
-                        }
-
-                        genero = TraducirGenero(encontrado ?? "General");
-                        if (genero.Length > 50) genero = genero[..50];
+                        var primerAutor = autores[0];
+                        if (primerAutor.TryGetProperty("name", out var nombre))
+                            autor = nombre.GetString() ?? "Desconocido";
                     }
 
-                    var idioma = "en";
-                    if (item.TryGetProperty("language", out var langs) && langs.GetArrayLength() > 0)
-                        idioma = langs[0].GetString() ?? "en";
+                    // Obtener URL de descarga TXT (siempre disponible en Gutenberg)
+                    string? urlDescarga = null;
+                    string formato = "txt";
 
-                    // Descarga directa desde Internet Archive
-                    var urlDescarga = $"https://archive.org/download/{iaId}/{iaId}.pdf";
+                    if (item.TryGetProperty("formats", out var formats))
+                    {
+                        // Preferir TXT UTF-8 (más confiable desde cloud)
+                        foreach (var f in formats.EnumerateObject())
+                        {
+                            if (f.Name.Contains("text/plain") && f.Value.GetString()?.EndsWith(".txt") == true)
+                            {
+                                urlDescarga = f.Value.GetString();
+                                formato = "txt";
+                                break;
+                            }
+                        }
 
+                        // Fallback: cualquier TXT
+                        if (urlDescarga == null)
+                        {
+                            foreach (var f in formats.EnumerateObject())
+                            {
+                                if (f.Name.Contains("text/plain"))
+                                {
+                                    urlDescarga = f.Value.GetString();
+                                    formato = "txt";
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(urlDescarga)) continue;
+
+                    // Portada
                     string? portada = null;
-                    if (item.TryGetProperty("cover_i", out var coverId))
-                        portada = $"https://covers.openlibrary.org/b/id/{coverId.GetInt32()}-M.jpg";
+                    if (item.TryGetProperty("formats", out var fmts2))
+                    {
+                        foreach (var f in fmts2.EnumerateObject())
+                        {
+                            if (f.Name.Contains("image/jpeg"))
+                            {
+                                portada = f.Value.GetString();
+                                break;
+                            }
+                        }
+                    }
+
+                    // Género desde bookshelves
+                    var genero = "General";
+                    if (item.TryGetProperty("bookshelves", out var shelves) && shelves.GetArrayLength() > 0)
+                    {
+                        var shelf = shelves[0].GetString() ?? "General";
+                        // Limpiar prefijos como "Browsing: " o "Movie Books"
+                        shelf = shelf.Replace("Browsing: ", "").Replace("Movie Books", "General").Trim();
+                        genero = TraducirGenero(shelf);
+                    }
+                    else if (item.TryGetProperty("subjects", out var subjects) && subjects.GetArrayLength() > 0)
+                    {
+                        var subj = subjects[0].GetString() ?? "General";
+                        if (subj.Contains(" -- ")) subj = subj.Split(" -- ")[0].Trim();
+                        genero = TraducirGenero(subj);
+                    }
+
+                    if (genero.Length > 50) genero = genero[..50];
+
+                    // Idioma
+                    var idioma = "en";
+                    if (item.TryGetProperty("languages", out var langs) && langs.GetArrayLength() > 0)
+                        idioma = langs[0].GetString() ?? "en";
 
                     libros.Add(new LibroExterno
                     {
                         Titulo = titulo,
                         Autor = autor,
                         UrlDescarga = urlDescarga,
-                        Formato = "pdf",
-                        Fuente = "Open Library",
+                        Formato = formato,
+                        Fuente = "Project Gutenberg",
                         Genero = genero,
                         Idioma = idioma,
-                        Portada = portada,
-                        IaId = iaId
+                        Portada = portada
                     });
                 }
 
-                _logger.LogInformation("Open Library devolvió {Count} libros para '{Query}'", libros.Count, query);
+                _logger.LogInformation("Gutendex devolvió {Count} libros para '{Query}'", libros.Count, query);
                 return libros;
             }
             catch (TaskCanceledException)
             {
-                _logger.LogWarning("Timeout al consultar Open Library para '{Query}'", query);
+                _logger.LogWarning("Timeout al consultar Gutendex para '{Query}'", query);
                 return new();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al consultar Open Library para '{Query}'", query);
+                _logger.LogError(ex, "Error al consultar Gutendex para '{Query}'", query);
                 return new();
             }
         }
