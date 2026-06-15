@@ -3,67 +3,341 @@
     Layout = null;
 }
 
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acceso denegado · AURORA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+            *, *::before, *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
 
-    body {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f5faf8;
-        font-family: 'Segoe UI', sans-serif;
-    }
+            :root {
+                --ivory: #f7f3ec;
+                --ivory-warm: #efe9de;
+                --ivory-deep: #e6ddd0;
+                --ink: #1c1814;
+                --ink-soft: #3d352c;
+                --ink-muted: #7a6e63;
+                --ink-ghost: #b0a498;
+                --terra: #b85c38;
+                --terra-light: #d4795a;
+                --terra-pale: rgba(184,92,56,0.10);
+                --terra-glow: rgba(184,92,56,0.22);
+                --border: rgba(28,24,20,0.10);
+                --border-warm: rgba(184,92,56,0.18);
+                --radius: 14px;
+                --radius-sm: 8px;
+                --ease: cubic-bezier(0.22,1,0.36,1);
+            }
 
-    .card {
-        text-align: center;
-        padding: 48px 40px;
-        background: #fff;
-        border-radius: 16px;
-        border: 1px solid rgba(15,110,86,0.10);
-        max-width: 380px;
-    }
+            body {
+                min-height: 100svh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--ivory);
+                font-family: 'Inter', system-ui, sans-serif;
+                padding: 1.5rem;
+            }
 
-    .icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-    }
+            .card {
+                background: #fff;
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                box-shadow: 0 8px 40px rgba(28,24,20,0.09);
+                width: 100%;
+                max-width: 400px;
+                overflow: hidden;
+            }
 
-    h1 {
-        font-size: 20px;
-        color: #0f2d24;
-        margin-bottom: 8px;
-    }
+            /* Top strip */
+            .card__strip {
+                height: 4px;
+                background: linear-gradient(90deg, var(--terra), var(--terra-light));
+            }
 
-    p {
-        font-size: 14px;
-        color: #4a7a66;
-        margin-bottom: 24px;
-    }
+            .card__body {
+                padding: 2.25rem 2rem 2rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 0;
+            }
 
-    a {
-        display: inline-block;
-        background: #1D9E75;
-        color: #fff;
-        padding: 10px 24px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 500;
-    }
+            /* Icon */
+            .card__icon {
+                width: 56px;
+                height: 56px;
+                background: var(--terra-pale);
+                border: 1px solid var(--border-warm);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 1.25rem;
+                color: var(--terra);
+            }
 
-        a:hover {
-            opacity: .85;
-        }
-</style>
+                .card__icon svg {
+                    width: 26px;
+                    height: 26px;
+                }
 
-<div class="card">
-    <div class="icon">🔒</div>
-    <h1>Acceso denegado</h1>
-    <p>No tienes permisos para ver esta página.</p>
-    <a asp-controller="Usuario" asp-action="Login">Volver al inicio</a>
-</div>
+            /* Brand */
+            .card__brand {
+                font-family: 'Playfair Display', serif;
+                font-size: 0.7rem;
+                font-weight: 700;
+                letter-spacing: 0.2em;
+                text-transform: uppercase;
+                color: var(--ink-ghost);
+                margin-bottom: 0.5rem;
+            }
+
+            h1 {
+                font-family: 'Playfair Display', serif;
+                font-size: 1.4rem;
+                font-weight: 700;
+                color: var(--ink);
+                margin-bottom: 0.5rem;
+                line-height: 1.2;
+            }
+
+            .card__desc {
+                font-size: 0.875rem;
+                color: var(--ink-muted);
+                line-height: 1.6;
+                margin-bottom: 1.75rem;
+            }
+
+            /* Divider */
+            .divider {
+                width: 100%;
+                height: 1px;
+                background: var(--border);
+                margin-bottom: 1.5rem;
+            }
+
+            /* Contacto */
+            .card__contacto-label {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: var(--ink-ghost);
+                margin-bottom: 0.75rem;
+            }
+
+            .contact-form {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 0.65rem;
+            }
+
+                .contact-form input,
+                .contact-form textarea {
+                    width: 100%;
+                    padding: 0.65rem 0.875rem;
+                    font-size: 0.875rem;
+                    font-family: 'Inter', sans-serif;
+                    color: var(--ink);
+                    background: var(--ivory-warm);
+                    border: 1px solid var(--border);
+                    border-radius: var(--radius-sm);
+                    outline: none;
+                    transition: border-color 0.2s var(--ease);
+                    resize: none;
+                }
+
+                    .contact-form input::placeholder,
+                    .contact-form textarea::placeholder {
+                        color: var(--ink-ghost);
+                    }
+
+                    .contact-form input:focus,
+                    .contact-form textarea:focus {
+                        border-color: var(--border-warm);
+                        background: #fff;
+                    }
+
+                .contact-form textarea {
+                    min-height: 80px;
+                }
+
+            .btn-enviar {
+                width: 100%;
+                padding: 0.7rem;
+                font-size: 0.875rem;
+                font-weight: 600;
+                font-family: 'Inter', sans-serif;
+                color: var(--ivory);
+                background: var(--terra);
+                border: none;
+                border-radius: var(--radius-sm);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.4rem;
+                transition: background 0.2s var(--ease);
+                margin-top: 0.25rem;
+            }
+
+                .btn-enviar:hover {
+                    background: var(--terra-light);
+                }
+
+                .btn-enviar:active {
+                    background: var(--ink);
+                }
+
+                .btn-enviar:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+
+            /* Volver */
+            .btn-volver {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                margin-top: 1.25rem;
+                font-size: 0.8rem;
+                color: var(--ink-ghost);
+                text-decoration: none;
+                transition: color 0.15s;
+            }
+
+                .btn-volver:hover {
+                    color: var(--ink-muted);
+                }
+
+            /* Toast */
+            .toast {
+                position: fixed;
+                bottom: 1.5rem;
+                left: 50%;
+                transform: translateX(-50%) translateY(10px);
+                background: var(--ink);
+                color: var(--ivory);
+                padding: 0.6rem 1.25rem;
+                border-radius: var(--radius-sm);
+                font-size: 0.82rem;
+                font-weight: 500;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+                white-space: nowrap;
+                z-index: 99;
+            }
+
+            .toast--visible {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+
+            .toast--error {
+                background: var(--terra);
+            }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="card__strip"></div>
+        <div class="card__body">
+
+            <div class="card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                </svg>
+            </div>
+
+            <p class="card__brand">AURORA</p>
+            <h1>Acceso denegado</h1>
+            <p class="card__desc">No tienes permisos para ver esta página. Si crees que es un error, escríbenos y lo revisamos.</p>
+
+            <div class="divider"></div>
+
+            <p class="card__contacto-label">Contactar al administrador</p>
+
+            <div class="contact-form">
+                <input type="email" id="correoInput" placeholder="Tu correo electrónico" />
+                <textarea id="mensajeInput" placeholder="Explica brevemente tu situación..."></textarea>
+                <button class="btn-enviar" onclick="enviarMensaje(this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Enviar mensaje
+                </button>
+            </div>
+
+            <a href="/Usuario/Login" class="btn-volver">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+            async function enviarMensaje(btn) {
+                const correo  = document.getElementById('correoInput').value.trim();
+                const mensaje = document.getElementById('mensajeInput').value.trim();
+
+                if (!correo || !mensaje) {
+                    mostrarToast('Completa todos los campos.', true);
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = 'Enviando...';
+
+                try {
+                    const res = await fetch('/Usuario/ContactarAdmin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ correo, mensaje })
+                    });
+
+                    if (res.ok) {
+                        mostrarToast('Mensaje enviado. Te responderemos pronto.');
+                        document.getElementById('correoInput').value  = '';
+                        document.getElementById('mensajeInput').value = '';
+                    } else {
+                        mostrarToast('Error al enviar. Intenta de nuevo.', true);
+                    }
+                } catch {
+                    mostrarToast('Error de conexión.', true);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar mensaje`;
+                }
+            }
+
+            function mostrarToast(msg, error = false) {
+                const t = document.getElementById('toast');
+                t.textContent = msg;
+                t.className = 'toast toast--visible' + (error ? ' toast--error' : '');
+                setTimeout(() => t.className = 'toast', 3500);
+            }
+    </script>
+
+</body>
+</html>
