@@ -518,3 +518,62 @@
         box-shadow: 0 0 28px var(--terra-glow);
     }
 }
+/* ── Mobile fixes ───────────────────────────────────────── */
+@media (max-width: 480px) {
+
+    /* Header: apilar en columna en pantallas muy pequeñas */
+    .logros-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .5rem;
+        padding: .75rem 0;
+    }
+
+    .logros-header__meta {
+        align-items: flex-start;
+        flex-direction: row;
+        gap: .75rem;
+    }
+
+    .logros-header__title {
+        font-size: 1.2rem;
+    }
+
+    /* Progreso global más compacto */
+    .progreso-global {
+        padding: .7rem .85rem;
+    }
+
+    /* Tabs con scroll horizontal visible */
+    .tabs {
+        gap: 0;
+        padding-bottom: 1px;
+    }
+
+    .tab {
+        font-size: .72rem;
+        padding: .55rem .7rem;
+    }
+
+    /* Cards a 1 columna con padding reducido */
+    .logro-card {
+        padding: .85rem;
+    }
+
+    .logro-card__nombre {
+        font-size: .85rem;
+    }
+
+    .logro-card__btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Toast ocupa todo el ancho en móvil */
+    .toast {
+        left: .75rem;
+        right: .75rem;
+        bottom: 1rem;
+        max-width: 100%;
+    }
+}
