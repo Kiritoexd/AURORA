@@ -811,7 +811,7 @@ namespace AURORA.Controllers
             }
 
             vm.TotalDiarios = vm.Diarios.Count;
-            vm.CompletadosHoy = vm.Diarios.Count(c => c.Entrada.Reclamado);
+            vm.CompletadosHoy = vm.Diarios.Count(c => c.Entrada.Completado);
             return vm;
         }
 
