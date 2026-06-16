@@ -199,16 +199,76 @@
                 <p class="info-box__label">¿Cometimos un error?</p>
                 <p class="info-box__text">Si crees que tu cuenta fue desactivada por error, escríbenos y lo revisamos.</p>
             </div>
-            <a href="https://mail.google.com/mail/?view=cm&to=auroraappoficial@gmail.com&su=Error%20en%20desactivaci%C3%B3n%20de%20cuenta&body=Hola%2C%20mi%20cuenta%20fue%20desactivada%20y%20creo%20que%20es%20un%20error.%0A%0AMi%20correo%20registrado%20es%3A%20"
-               target="_blank"
-               class="btn-volver" style="margin-bottom: 0.6rem;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
-                </svg>
-                Enviar correo
-            </a>
+            <div class="divider"></div>
+
+            <p class="card__contacto-label" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:#b0a498;margin-bottom:0.75rem;">¿Cometimos un error?</p>
+
+            <div class="contact-form" style="width:100%;display:flex;flex-direction:column;gap:0.65rem;">
+                <input type="email" id="correoInput" placeholder="Tu correo electrónico"
+                       style="width:100%;padding:0.65rem 0.875rem;font-size:0.875rem;font-family:'Inter',sans-serif;color:#1c1814;background:#efe9de;border:1px solid rgba(28,24,20,0.10);border-radius:8px;outline:none;" />
+                <textarea id="mensajeInput" placeholder="Explica brevemente tu situación..."
+                          style="width:100%;padding:0.65rem 0.875rem;font-size:0.875rem;font-family:'Inter',sans-serif;color:#1c1814;background:#efe9de;border:1px solid rgba(28,24,20,0.10);border-radius:8px;outline:none;resize:none;min-height:80px;"></textarea>
+                <button onclick="enviarMensaje(this)"
+                        style="width:100%;padding:0.7rem;font-size:0.875rem;font-weight:600;font-family:'Inter',sans-serif;color:#f7f3ec;background:#b85c38;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Enviar mensaje
+                </button>
+            </div>
+
+            <div id="toast" style="display:none;margin-top:1rem;padding:0.6rem 1rem;background:#1c1814;color:#f7f3ec;border-radius:8px;font-size:0.82rem;text-align:center;"></div>
+
+            <script>
+                            async function enviarMensaje(btn) {
+                                const correo  = document.getElementById('correoInput').value.trim();
+                                const mensaje = document.getElementById('mensajeInput').value.trim();
+                                const toast   = document.getElementById('toast');
+
+                                if (!correo || !mensaje) {
+                                    toast.textContent = 'Completa todos los campos.';
+                                    toast.style.display = 'block';
+                                    toast.style.background = '#b85c38';
+                                    setTimeout(() => toast.style.display = 'none', 3500);
+                                    return;
+                                }
+
+                                btn.disabled = true;
+                                btn.textContent = 'Enviando...';
+
+                                try {
+                                    const res = await fetch('/Usuario/ContactarAdmin', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ correo, mensaje })
+                                    });
+
+                                    if (res.ok) {
+                                        toast.textContent = 'Mensaje enviado. Te responderemos pronto.';
+                                        toast.style.background = '#1c1814';
+                                        toast.style.display = 'block';
+                                        document.getElementById('correoInput').value  = '';
+                                        document.getElementById('mensajeInput').value = '';
+                                        setTimeout(() => toast.style.display = 'none', 3500);
+                                    } else {
+                                        toast.textContent = 'Error al enviar. Intenta de nuevo.';
+                                        toast.style.background = '#b85c38';
+                                        toast.style.display = 'block';
+                                        setTimeout(() => toast.style.display = 'none', 3500);
+                                    }
+                                } catch {
+                                    toast.textContent = 'Error de conexión.';
+                                    toast.style.background = '#b85c38';
+                                    toast.style.display = 'block';
+                                    setTimeout(() => toast.style.display = 'none', 3500);
+                                } finally {
+                                    btn.disabled = false;
+                                    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar mensaje`;
+                                }
+                            }
+            </script>
             <a asp-controller="Usuario" asp-action="Login" class="btn-volver">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                      stroke-linecap="round" stroke-linejoin="round">
