@@ -85,6 +85,90 @@ namespace AURORA.Servicios
             msg.AddTo(new EmailAddress("auroraappoficial@gmail.com", "Admin AURORA"));
             await client.SendEmailAsync(msg);
         }
+        public async Task SendContactoConfirmacionAsync(string toEmail)
+        {
+            var client = new SendGridClient(_apiKey);
+            var msg = new SendGridMessage
+            {
+                From = new EmailAddress("auroraappoficial@gmail.com", "AURORA"),
+                Subject = "Recibimos tu mensaje · AURORA",
+                HtmlContent = @"
+<!DOCTYPE html>
+<html lang=""es"">
+<head><meta charset=""utf-8""/></head>
+<body style=""margin:0;padding:0;background:#f7f3ec;font-family:Arial,sans-serif;"">
+  <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""padding:40px 16px;"">
+    <tr><td align=""center"">
+      <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+             style=""max-width:480px;background:#ffffff;border-radius:14px;border:1px solid rgba(28,24,20,0.10);overflow:hidden;"">
+
+        <tr>
+          <td style=""height:4px;background:linear-gradient(90deg,#b85c38,#d4795a);""></td>
+        </tr>
+
+        <tr>
+          <td style=""padding:32px 36px 0;text-align:center;"">
+            <p style=""margin:0;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#b0a498;"">AURORA</p>
+            <h1 style=""margin:12px 0 0;font-size:20px;font-weight:700;color:#1c1814;"">Recibimos tu mensaje</h1>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=""padding:20px 36px 0;"">
+            <p style=""margin:0;font-size:13px;color:#7a6e63;line-height:1.7;text-align:center;"">
+              Gracias por contactarnos. Hemos recibido tu mensaje y lo revisaremos a la brevedad.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=""padding:20px 36px 0;"">
+            <div style=""background:#efe9de;border-radius:8px;padding:14px 16px;border:1px solid rgba(28,24,20,0.08);"">
+              <p style=""margin:0 0 10px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#b0a498;"">¿Qué sigue?</p>
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"" width=""100%"">
+                <tr>
+                  <td style=""padding:5px 0;"">
+                    <table cellpadding=""0"" cellspacing=""0"" border=""0"">
+                      <tr>
+                        <td style=""font-size:16px;padding-right:10px;"">⏱</td>
+                        <td style=""font-size:13px;color:#3d352c;line-height:1.5;"">Nuestro equipo te responderá en <strong>24–48 horas</strong>.</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style=""padding:5px 0;"">
+                    <table cellpadding=""0"" cellspacing=""0"" border=""0"">
+                      <tr>
+                        <td style=""font-size:16px;padding-right:10px;"">📬</td>
+                        <td style=""font-size:13px;color:#3d352c;line-height:1.5;"">Revisa tu bandeja de entrada y la carpeta de <strong>spam</strong>.</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style=""padding:28px 36px 32px;"">
+            <div style=""border-top:1px solid rgba(28,24,20,0.08);padding-top:20px;text-align:center;"">
+              <p style=""margin:0;font-size:11px;color:#b0a498;"">— Equipo AURORA · auroraappoficial@gmail.com</p>
+            </div>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"
+            };
+
+            msg.AddTo(new EmailAddress(toEmail));
+            await client.SendEmailAsync(msg);
+        }
         public async Task SendPasswordRecoveryCodeAsync(string toEmail, string code)
         {
             var codeBoxes = string.Join("", code.Select(c => $@"

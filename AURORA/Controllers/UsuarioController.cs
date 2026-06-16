@@ -178,6 +178,7 @@ namespace AURORA.Controllers
                 return BadRequest();
 
             await _emailService.SendAdminAccessRequestAsync(dto.Correo, dto.Mensaje);
+            await _emailService.SendContactoConfirmacionAsync(dto.Correo); // ← respuesta automática
             return Ok();
         }
 
