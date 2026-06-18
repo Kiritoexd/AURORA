@@ -47,15 +47,17 @@
 
         <div class="hero-body">
             <div class="hero-content">
-                <p class="hero-eyebrow reveal">Tu biblioteca digital</p>
+                <!-- CAMBIO: eyebrow más directo y con tensión -->
+                <p class="hero-eyebrow reveal">Tienes PDFs sin leer. Eso termina hoy.</p>
                 <h1 class="hero-title reveal">
-                    <span class="ht-line">Lee más.</span>
-                    <em class="ht-line ht-em">Vive mejor.</em>
+                    <span class="ht-line">Tu biblioteca.</span>
+                    <em class="ht-line ht-em">Tu hábito.</em>
                 </h1>
-                <p class="hero-desc reveal">Aurora convierte tus PDFs en una experiencia de lectura moderna — estadísticas, rachas y recomendaciones inteligentes.</p>
+                <!-- CAMBIO: descripción orientada a beneficios concretos, no a funciones -->
+                <p class="hero-desc reveal">Sube tus libros, retoma donde los dejaste y construye el hábito de leer — sin perder páginas, sin perder el ritmo.</p>
                 <div class="hero-ctas reveal">
                     <a asp-controller="Usuario" asp-action="Registro" class="cta cta--primary page-link">
-                        Empezar gratis
+                        Empezar gratis — es rápido
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
                     </a>
                     <a asp-controller="Usuario" asp-action="Login" class="cta cta--ghost page-link">Ya tengo cuenta</a>
@@ -97,9 +99,11 @@
     <section class="features" id="features">
         <div class="features-inner">
             <p class="section-eyebrow scroll-reveal">¿Qué es Aurora?</p>
-            <h2 class="section-title scroll-reveal">Transforma<br><em>tu lectura</em></h2>
+            <!-- CAMBIO: título más aspiracional -->
+            <h2 class="section-title scroll-reveal">El lugar donde<br><em>los libros se terminan</em></h2>
 
             <div class="features-grid">
+                <!-- CAMBIO: cada tarjeta habla de transformación, no de funciones -->
                 <div class="feat-card scroll-reveal" data-delay="0">
                     <div class="feat-num">01</div>
                     <div class="feat-icon">
@@ -108,8 +112,8 @@
                             <path d="M4 19a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1" />
                         </svg>
                     </div>
-                    <h3 class="feat-title">Biblioteca personal</h3>
-                    <p class="feat-desc">Importa tus PDFs y organízalos por estado: pendiente, leyendo o terminado.</p>
+                    <h3 class="feat-title">Tu colección, siempre ordenada</h3>
+                    <p class="feat-desc">Sube tus PDFs y marca cada uno: pendiente, leyendo o terminado. Nunca más pierdas un libro entre carpetas.</p>
                     <div class="feat-tag">ORGANIZACIÓN</div>
                 </div>
 
@@ -120,8 +124,8 @@
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                         </svg>
                     </div>
-                    <h3 class="feat-title">Estadísticas reales</h3>
-                    <p class="feat-desc">Visualiza tu tiempo de lectura, géneros favoritos y progreso mensual.</p>
+                    <h3 class="feat-title">Descubre cuánto lees — te sorprenderás</h3>
+                    <p class="feat-desc">Tiempo real de lectura, géneros favoritos y progreso mensual. Ver los números te motiva a seguir.</p>
                     <div class="feat-tag">ANÁLISIS</div>
                 </div>
 
@@ -132,8 +136,8 @@
                             <path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H13L14 2z" />
                         </svg>
                     </div>
-                    <h3 class="feat-title">Rachas y logros</h3>
-                    <p class="feat-desc">Mantén el hábito con rachas diarias y desbloquea logros por tu constancia.</p>
+                    <h3 class="feat-title">No rompas la racha</h3>
+                    <p class="feat-desc">Un día seguido se convierte en diez, y diez en un hábito real. Las rachas y los logros hacen que no quieras parar.</p>
                     <div class="feat-tag">MOTIVACIÓN</div>
                 </div>
 
@@ -145,8 +149,8 @@
                             <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
                         </svg>
                     </div>
-                    <h3 class="feat-title">IA integrada</h3>
-                    <p class="feat-desc">Recomendaciones y resúmenes inteligentes con nuestro asistente de lectura.</p>
+                    <h3 class="feat-title">Un asistente que ya leyó por ti</h3>
+                    <p class="feat-desc">Resúmenes, ideas clave y recomendaciones del siguiente libro que deberías leer. La IA hace el trabajo previo; tú disfrutas la lectura.</p>
                     <div class="feat-tag">INTELIGENCIA</div>
                 </div>
             </div>
@@ -154,37 +158,39 @@
     </section>
 
     <!-- STATS BAND -->
+    <!-- CAMBIO: estadísticas orientadas al usuario, no a la plataforma -->
     <section class="stats-band">
         <div class="stats-inner">
             <div class="stat-item scroll-reveal">
-                <div class="stat-num" data-count="500">0</div>
-                <div class="stat-lbl">Libros importados</div>
+                <div class="stat-num" data-count="100">0</div><span class="stat-pct">%</span>
+                <div class="stat-lbl">gratis, para siempre</div>
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item scroll-reveal" data-delay="100">
-                <div class="stat-num" data-count="12">0</div>
-                <div class="stat-lbl">Géneros disponibles</div>
+                <div class="stat-num" data-count="60">0</div><span class="stat-pct">s</span>
+                <div class="stat-lbl">para subir tu primer libro</div>
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item scroll-reveal" data-delay="200">
-                <div class="stat-num" data-count="100">0</div>
-                <div class="stat-lbl">% gratis</div>
+                <div class="stat-num" data-count="0">∞</div>
+                <div class="stat-lbl">libros sin límite</div>
             </div>
         </div>
     </section>
 
-    <!-- CTA FINAL — solo un botón de registro -->
+    <!-- CTA FINAL -->
     <section class="final-cta">
         <div class="final-bg" aria-hidden="true">
             <div class="fb-orb fb-orb--1"></div>
             <div class="fb-orb fb-orb--2"></div>
         </div>
         <div class="final-inner scroll-reveal">
-            <p class="final-eyebrow">¿Listo para comenzar?</p>
-            <h2 class="final-title">Convierte la lectura<br><em>en un hábito</em></h2>
-            <p class="final-sub">Únete a Aurora y transforma cómo lees, aprendes y creces.</p>
+            <!-- CAMBIO: CTA final con beneficio inmediato y sin presión -->
+            <p class="final-eyebrow">Empieza hoy, no mañana</p>
+            <h2 class="final-title">Tu primer libro<br><em>en 60 segundos</em></h2>
+            <p class="final-sub">Sube un PDF, retoma donde lo dejaste, y mira cómo tu hábito crece solo. Sin tarjeta de crédito, sin trucos.</p>
             <a asp-controller="Usuario" asp-action="Registro" class="cta cta--primary page-link">
-                Crear mi cuenta
+                Crear mi cuenta gratis
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </a>
         </div>
